@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - DinarakTaskOne</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-mortarboard-fill"></i> DinarakTaskOne
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="About">About Us</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Contact">Contact Us</a>
+                        </li>
+@*                         <li class="nav-item">
+                            <a href="@Url.Action("About", "Home")" class="nav-link text-white">About Us</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/Home/About" class="nav-link text-white">About Us</a>
+                        </li> *@
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle"></i> @User.Identity.Name
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li class="dropdown-role-title admin-icon">
+                                            Admin
+                                        </li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="Dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                                    }
+                                    @if (User.IsInRole("Instructor"))
+                                    {
+                                        <li class="dropdown-role-title instructor-icon">
+                                            Instructor
+                                        </li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Course" asp-action="CoursesDashboard"><i class="bi bi-journal"></i> Manage Courses</a></li>
+                                    }
+                                    @if (User.IsInRole("Student"))
+                                    {
+                                        <li class="dropdown-role-title student-icon">
+                                           Student
+                                        </li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Student" asp-action="MyCourses"><i class="bi bi-book"></i> My Courses</a></li>
+                                    }
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Settings"><i class="bi bi-gear"></i> Settings</a></li>
+                                    <li>
+                                        <form asp-area="" asp-controller="Sign" asp-action="Logout" method="post">
+                                            <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="btn btn-outline-light me-2" asp-area="" asp-controller="Sign" asp-action="Login"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-warning" asp-area="" asp-controller="Sign" asp-action="Register"><i class="bi bi-person-plus-fill"></i> Register</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <!-- About Us Section -->
+                <div class="col-md-4">
+                    <h6 class="text-warning fw-bold mb-3">About Us</h6>
+                    <p class="small">Empowering learners with high-quality content and engaging online courses. Our platform brings education to your fingertips, anytime, anywhere.</p>
+                </div>
+
+                <!-- Quick Links Section -->
+                <div class="col-md-4">
+                    <h6 class="text-warning fw-bold mb-3">Quick Links</h6>
+                    <ul class="list-unstyled small">
+                        <li><a class="text-white" asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li><a class="text-white" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a></li>
+                        <li><a class="text-white" asp-area="" asp-controller="Home" asp-action="About">About Us</a></li>
+                    </ul>
+                </div>
+
+                <!-- Follow Us Section -->
+                <div class="col-md-4">
+                    <h6 class="text-warning fw-bold mb-3">Follow Us</h6>
+                    <div>
+                        <a href="#" class="text-white me-3"><i class="bi bi-facebook fs-4"></i></a>
+                        <a href="#" class="text-white me-3"><i class="bi bi-twitter fs-4"></i></a>
+                        <a href="#" class="text-white"><i class="bi bi-instagram fs-4"></i></a>
+                    </div>
+                    <p class="small mt-2">Stay connected for updates and new course releases.</p>
+                </div>
+            </div>
+            <div class="text-center small mt-3">
+                &copy; 2024 - DinarakTaskOne. All Rights Reserved. | <a href="#" class="text-warning">Terms of Service</a> | <a href="#" class="text-warning">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

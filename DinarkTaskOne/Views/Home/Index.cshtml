@@ -1,0 +1,99 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container">
+    <!-- Header Section -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary">Welcome to E-Learning Platform</h1>
+        <img src="~/images/elearning-hero.png" alt="E-Learning Platform" class="img-fluid" style="max-height: 250px; object-fit: cover;" />
+        <p class="lead text-muted">Your gateway to a world of knowledge and learning.</p>
+    </div>
+
+    <!-- Action Section -->
+    <div class="row justify-content-center text-center mb-4">
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Explore Courses</h5>
+                        <p class="card-text">Discover new courses and expand your skills.</p>
+                        @if (User.IsInRole("Instructor"))
+                        {
+                            <a class="btn btn-outline-primary" asp-controller="Course" asp-action="CoursesDashboard">Manage My Courses</a>
+                        }
+                        else if (User.IsInRole("Student"))
+                        {
+                            <a class="btn btn-outline-primary" asp-controller="Student" asp-action="Enroll">Enroll in a Course</a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @if (User.IsInRole("Student"))
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">My Courses</h5>
+                            <p class="card-text">Access your enrolled courses and track your progress.</p>
+                            <a class="btn btn-outline-primary" asp-controller="Student" asp-action="MyCourses">View My Courses</a>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Profile Settings</h5>
+                        <p class="card-text">Update your profile, change settings, and more.</p>
+                        <a class="btn btn-outline-primary" asp-controller="Account" asp-action="Settings">Manage Profile</a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="col-md-5 mb-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Join Our Community</h5>
+                        <p class="card-text">Sign up to start your learning journey with us.</p>
+                        <a class="btn btn-primary" asp-controller="Sign" asp-action="Register">Get Started</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5 mb-3">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">Already a Member?</h5>
+                        <p class="card-text">Sign in to access courses and continue learning.</p>
+                        <a class="btn btn-primary" asp-controller="Sign" asp-action="Login">Sign In</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mt-5 text-center justify-content-center">
+        <div class="col-md-4 mb-3">
+            <i class="bi bi-lightbulb-fill text-primary display-4 mb-3"></i>
+            <h5>Innovative Learning</h5>
+            <p>Access the latest courses designed by industry experts.</p>
+        </div>
+        <div class="col-md-4 mb-3">
+            <i class="bi bi-people-fill text-primary display-4 mb-3"></i>
+            <h5>Community Driven</h5>
+            <p>Join a community of learners and share your knowledge.</p>
+        </div>
+        <div class="col-md-4 mb-3">
+            <i class="bi bi-shield-fill-check text-primary display-4 mb-3"></i>
+            <h5>Secure and Reliable</h5>
+            <p>Learn with confidence knowing your data is protected.</p>
+        </div>
+    </div>
+</div>

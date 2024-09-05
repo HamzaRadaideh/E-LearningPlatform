@@ -1,0 +1,16 @@
+﻿@model DinarkTaskOne.Models.ManageCourse.CourseModel
+
+<div class="container mt-5">
+    <h2 class="text-danger mb-4">Delete Course</h2>
+    <div class="alert alert-warning shadow-sm p-4 rounded">
+        <p class="lead">Are you sure you want to delete the course <strong>@Model.Title</strong>?</p>
+
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="CourseId" />
+            <div class="d-flex">
+                <button type="submit" class="btn btn-danger me-2 flex-grow-1">Delete Course</button>
+                <a asp-action="Details" asp-route-id="@Model.CourseId" class="btn btn-secondary flex-grow-1">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

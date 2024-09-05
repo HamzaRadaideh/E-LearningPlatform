@@ -1,0 +1,28 @@
+﻿@model DinarkTaskOne.Models.ManageCourse.MaterialsModel
+
+<div class="container mt-5">
+    <h2 class="text-primary mb-4">Upload Material</h2>
+    <form asp-action="UploadMaterial" method="post" enctype="multipart/form-data" class="shadow-sm p-4 bg-white rounded">
+        <input type="hidden" name="courseId" value="@ViewBag.CourseId" />
+
+        <div class="mb-3">
+            <label for="file" class="form-label fw-bold">Select File</label>
+            <input type="file" class="form-control border-secondary" id="file" name="file" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="fileType" class="form-label fw-bold">File Type</label>
+            <select class="form-control border-secondary" id="fileType" name="fileType" required>
+                <option value="PDF">PDF</option>
+                <option value="Video">Video</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label fw-bold">Description</label>
+            <textarea class="form-control border-secondary" id="description" name="description" placeholder="Enter file description" rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2">Upload Material</button>
+    </form>
+</div>

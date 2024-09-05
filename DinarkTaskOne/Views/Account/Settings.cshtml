@@ -1,0 +1,34 @@
+﻿@{
+    ViewData["Title"] = "Settings";
+}
+
+<div class="container mt-5">
+    <!-- Header Section -->
+    <div class="text-center mb-4">
+        <h2 class="text-primary fw-bold">Account Settings</h2>
+        <p class="text-muted">Manage your account settings and personal information.</p>
+    </div>
+
+    <!-- Settings Options -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="list-group shadow-sm rounded">
+                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                   asp-controller="Account" asp-action="UserInfo">
+                    <span><i class="bi bi-person text-primary me-2"></i>User Info</span>
+                    <i class="bi bi-chevron-right text-secondary"></i>
+                </a>
+                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                   asp-controller="Account" asp-action="PersonalInfo">
+                    <span><i class="bi bi-phone text-primary me-2"></i>Personal Info</span>
+                    <i class="bi bi-chevron-right text-secondary"></i>
+                </a>
+                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                   asp-controller="Account" asp-action="ChangePassword">
+                    <span><i class="bi bi-lock text-primary me-2"></i>Change Password</span>
+                    <i class="bi bi-chevron-right text-secondary"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

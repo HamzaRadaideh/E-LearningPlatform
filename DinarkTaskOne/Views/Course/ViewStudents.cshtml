@@ -1,0 +1,24 @@
+﻿@model IEnumerable<DinarkTaskOne.Models.ManageCourse.EnrollModel>
+
+<div class="container mt-5">
+    <h2>Enrolled Students</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var enrollment in Model)
+            {
+                <tr>
+                    <td>@enrollment.Student.FirstName @enrollment.Student.LastName</td>
+                    <td>@enrollment.Student.Email</td>
+                    <td>@enrollment.Student.PhoneNumber</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

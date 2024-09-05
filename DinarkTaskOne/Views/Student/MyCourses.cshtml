@@ -1,0 +1,43 @@
+﻿@model IEnumerable<DinarkTaskOne.Models.ManageCourse.EnrollModel>
+
+@{
+    ViewBag.Title = "My Courses";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold">My Courses</h2>
+        <!-- No "Create New Course" button needed for students -->
+    </div>
+
+    <div class="row">
+        @if (Model == null || !Model.Any())
+        {
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="bi bi-info-circle"></i> You are not enrolled in any courses yet.
+                    </div>
+                </div>
+        }
+        else
+        {
+            @foreach (var enrollment in Model)
+            {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary fw-bold">@enrollment.Course?.Title</h5>
+                                    <p class="card-text text-muted">@enrollment.Course?.Description</p>
+                                            <p><strong>Instructor:</strong> @enrollment.Course?.Instructor?.UserName</p>
+                                    <div class="btn-group w-100" role="group">
+                                        <a class="btn btn-outline-primary w-100" asp-controller="Student" asp-action="ViewCourse" asp-route-courseId="@enrollment.CourseId">
+                                            <i class="bi bi-book"></i> View Course
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+            }
+        }
+    </div>
+</div>

@@ -1,0 +1,24 @@
+﻿@model DinarkTaskOne.Models.ManageCourse.AnnouncementModel
+
+<div class="container mt-5">
+    <h2 class="text-primary mb-4">Make an Announcement</h2>
+    <form asp-action="MakeAnnouncement" method="post" class="shadow-sm p-4 bg-white rounded">
+        <input type="hidden" name="courseId" value="@ViewBag.CourseId" />
+
+        <div class="mb-3">
+            <label for="content" class="form-label fw-bold">Announcement Content</label>
+            <textarea class="form-control border-secondary" id="content" name="content" placeholder="Enter announcement content" rows="3" required></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="type" class="form-label fw-bold">Announcement Type</label>
+            <select class="form-control border-secondary" id="type" name="type" required>
+                <option value="Info">Info</option>
+                <option value="Warning">Warning</option>
+                <option value="Error">Error</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2">Post Announcement</button>
+    </form>
+</div>

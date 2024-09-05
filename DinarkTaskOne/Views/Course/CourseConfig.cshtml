@@ -1,0 +1,150 @@
+﻿@model DinarkTaskOne.Models.ManageCourse.CourseModel
+
+<div class="container">
+    <!-- Header Section -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-primary">Configure Course: @Model.Title</h2>
+            <p class="text-muted">@Model.Description</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group" role="group">
+                <a asp-action="Edit" asp-route-id="@Model.CourseId" class="btn btn-outline-success mx-1">
+                    <i class="bi bi-pencil-square"></i> Edit
+                </a>
+                <a asp-action="ViewStudents" asp-route-id="@Model.CourseId" class="btn btn-outline-info mx-1">
+                    <i class="bi bi-people"></i> Students
+                </a>
+                <a asp-action="Delete" asp-route-id="@Model.CourseId" class="btn btn-outline-danger mx-1">
+                    <i class="bi bi-trash"></i> Delete
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+
+    <!-- Action Cards Section -->
+    <div class="row text-center">
+        @* Card for Uploading Course Materials *@
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="bi bi-upload"></i> Course Materials</h5>
+                    <p class="card-text">Upload and manage course materials for your students.</p>
+                    <a asp-action="UploadMaterial" asp-route-courseId="@Model.CourseId" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Upload
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @* Card for Creating Quizzes *@
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="bi bi-clipboard"></i> Quizzes</h5>
+                    <p class="card-text">Create and manage quizzes to assess student learning.</p>
+                    <a asp-action="Create" asp-controller="Quiz" asp-route-courseId="@Model.CourseId" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @* Card for Making Announcements *@
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="bi bi-megaphone"></i> Announcements</h5>
+                    <p class="card-text">Communicate important updates and announcements to students.</p>
+                    <a asp-action="MakeAnnouncement" asp-route-courseId="@Model.CourseId" class="btn btn-primary">
+                        <i class="bi bi-megaphone"></i> Announce
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+
+    <!-- Combined Lists Section -->
+    <div class="row">
+        <div class="col-md-12">
+            <h4 class="text-primary mb-3">Course Details</h4>
+            <div class="accordion" id="courseDetailsAccordion">
+                <!-- Materials Section -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="materialsHeading">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#materialsCollapse" aria-expanded="true" aria-controls="materialsCollapse">
+                            Course Materials
+                        </button>
+                    </h2>
+                    <div id="materialsCollapse" class="accordion-collapse collapse show" aria-labelledby="materialsHeading" data-bs-parent="#courseDetailsAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-group">
+                                @foreach (var material in Model.Materials)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span><i class="bi bi-file-earmark-text"></i> @material.Description</span>
+                                        <a href="@Url.Content("~/Uploads/" + material.FilePath)" target="_blank" class="badge bg-primary">@material.FileType</a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Announcements Section -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="announcementsHeading">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#announcementsCollapse" aria-expanded="false" aria-controls="announcementsCollapse">
+                            Announcements
+                        </button>
+                    </h2>
+                    <div id="announcementsCollapse" class="accordion-collapse collapse" aria-labelledby="announcementsHeading" data-bs-parent="#courseDetailsAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-group">
+                                @foreach (var announcement in Model.Announcements)
+                                {
+                                    <li class="list-group-item list-group-item-@announcement.Type.ToLower()">
+                                        <i class="bi bi-megaphone-fill"></i> @announcement.Content
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Quizzes Section -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="quizzesHeading">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#quizzesCollapse" aria-expanded="false" aria-controls="quizzesCollapse">
+                            Quizzes
+                        </button>
+                    </h2>
+@*                     <div id="quizzesCollapse" class="accordion-collapse collapse" aria-labelledby="quizzesHeading" data-bs-parent="#courseDetailsAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-group">
+                                @foreach (var quiz in Model.Quizzes)
+                                {
+                                    <li class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-question-circle"></i> <strong>Quiz Title:</strong> @quiz.Title</span>
+                                            <div class="btn-group">
+                                                <a asp-action="Edit" asp-route-id="@quiz.QuizId" class="btn btn-outline-success btn-sm mx-1"><i class="bi bi-pencil"></i> Edit</a>
+                                                <a asp-action="View" asp-route-id="@quiz.QuizId" class="btn btn-outline-info btn-sm mx-1"><i class="bi bi-eye"></i> View</a>
+                                                <form asp-action="Delete" asp-route-id="@quiz.QuizId" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm mx-1"><i class="bi bi-trash"></i> Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div> *@
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

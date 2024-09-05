@@ -1,0 +1,46 @@
+﻿@model IEnumerable<DinarkTaskOne.Models.ManageCourse.CourseModel>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold">My Courses</h2>
+        <a asp-action="Create" class="btn btn-outline-primary">
+            <i class="bi bi-plus-circle me-1"></i> Create New Course
+        </a>
+    </div>
+
+    <div class="row">
+        @if (Model == null || !Model.Any())
+        {
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> You haven't created any courses yet. Start by adding a new course.
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var course in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary fw-bold">@course.Title</h5>
+                            <p class="card-text text-muted">@course.Description</p>
+                            <div class="btn-group" role="group">
+                                <a asp-action="Edit" asp-route-id="@course.CourseId" class="btn btn-outline-info">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@course.CourseId" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to delete this course?');">
+                                    <i class="bi bi-trash"></i> Delete
+                                </a>
+                                <a asp-action="CourseConfig" asp-route-id="@course.CourseId" class="btn btn-outline-success">
+                                    <i class="bi bi-gear"></i> Configure
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
