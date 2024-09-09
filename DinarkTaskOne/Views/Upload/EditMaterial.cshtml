@@ -1,0 +1,22 @@
+﻿@model DinarkTaskOne.Models.ManageCourse.MaterialsModel
+
+<div class="container mt-5">
+    <h2 class="text-primary mb-4">Edit Course Material</h2>
+    <form asp-action="EditMaterial" method="post" class="shadow-sm p-4 bg-white rounded">
+        <input type="hidden" asp-for="MaterialId" />
+
+        <div class="mb-3">
+            <label for="FileType" class="form-label fw-bold">File Type</label>
+            <input type="text" class="form-control border-secondary" id="FileType" asp-for="FileType" placeholder="Enter file type" required />
+            <span asp-validation-for="FileType" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label for="Description" class="form-label fw-bold">Description</label>
+            <textarea class="form-control border-secondary" id="Description" asp-for="Description" placeholder="Enter file description" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2">Save Changes</button>
+    </form>
+</div>

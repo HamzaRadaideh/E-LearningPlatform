@@ -1,8 +1,10 @@
 ﻿@model DinarkTaskOne.Models.ManageCourse.CourseModel
 
 <div class="container mt-5">
-    <h2 class="text-primary mb-4">Create Course</h2>
-    <form asp-action="Create" method="post" class="shadow-sm p-4 bg-white rounded">
+    <h2 class="text-primary mb-4">Edit Course</h2>
+    <form asp-action="EditCourse" method="post" class="shadow-sm p-4 bg-white rounded">
+        <input type="hidden" asp-for="CourseId" />
+
         <div class="mb-3">
             <label for="Title" class="form-label fw-bold">Course Title</label>
             <input type="text" class="form-control border-secondary" id="Title" asp-for="Title" placeholder="Enter course title" required>
@@ -15,6 +17,6 @@
             <span asp-validation-for="Description" class="text-danger"></span>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100 py-2">Create Course</button>
+        <button type="submit" class="btn btn-primary w-100 py-2">Save Changes</button>
     </form>
 </div>

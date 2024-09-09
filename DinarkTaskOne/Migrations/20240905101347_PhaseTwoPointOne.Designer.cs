@@ -4,6 +4,7 @@ using DinarkTaskOne.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DinarkTaskOne.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240905101347_PhaseTwoPointOne")]
+    partial class PhaseTwoPointOne
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -167,17 +170,11 @@ namespace DinarkTaskOne.Migrations
                     b.Property<bool>("Completed")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("EndTime")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("QuizId")
                         .HasColumnType("int");
 
                     b.Property<int?>("Score")
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("StudentId")
                         .HasColumnType("int");
@@ -228,6 +225,9 @@ namespace DinarkTaskOne.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuestionId"));
 
                     b.Property<int>("Marks")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NumberOfOptions")
                         .HasColumnType("int");
 
                     b.Property<int>("QuizId")
@@ -489,7 +489,7 @@ namespace DinarkTaskOne.Migrations
             modelBuilder.Entity("DinarkTaskOne.Models.MakeQuiz.QuizModel", b =>
                 {
                     b.HasOne("DinarkTaskOne.Models.ManageCourse.CourseModel", "Course")
-                        .WithMany("Quizzes")
+                        .WithMany()
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -580,8 +580,6 @@ namespace DinarkTaskOne.Migrations
                     b.Navigation("Enrollments");
 
                     b.Navigation("Materials");
-
-                    b.Navigation("Quizzes");
                 });
 
             modelBuilder.Entity("DinarkTaskOne.Models.UserSpecficModels.InstructorModel", b =>

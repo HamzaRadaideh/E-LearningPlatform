@@ -1,0 +1,26 @@
+﻿@model DinarkTaskOne.Models.ManageCourse.AnnouncementModel
+
+<div class="container mt-5">
+    <h2 class="text-primary mb-4">Edit Announcement</h2>
+    <form asp-action="EditAnnouncement" method="post" class="shadow-sm p-4 bg-white rounded">
+        <input type="hidden" asp-for="AnnouncementId" />
+
+        <div class="mb-3">
+            <label for="Content" class="form-label fw-bold">Announcement Content</label>
+            <textarea class="form-control border-secondary" id="Content" asp-for="Content" placeholder="Enter announcement content" rows="4" required></textarea>
+            <span asp-validation-for="Content" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label for="Type" class="form-label fw-bold">Announcement Type</label>
+            <select class="form-select border-secondary" id="Type" asp-for="Type">
+                <option value="Important">Important</option>
+                <option value="Update">Update</option>
+                <option value="General">General</option>
+            </select>
+            <span asp-validation-for="Type" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2">Save Changes</button>
+    </form>
+</div>

@@ -9,15 +9,15 @@
         </div>
         <div class="col-md-4 text-end">
             <div class="btn-group" role="group">
-                <a asp-action="Edit" asp-route-id="@Model.CourseId" class="btn btn-outline-success mx-1">
+                <a asp-action="EditCourse" asp-route-id="@Model.CourseId" class="btn btn-outline-success mx-1">
                     <i class="bi bi-pencil-square"></i> Edit
                 </a>
                 <a asp-action="ViewStudents" asp-route-id="@Model.CourseId" class="btn btn-outline-info mx-1">
                     <i class="bi bi-people"></i> Students
                 </a>
-                <a asp-action="Delete" asp-route-id="@Model.CourseId" class="btn btn-outline-danger mx-1">
-                    <i class="bi bi-trash"></i> Delete
-                </a>
+                <form asp-action="DeleteCourse" asp-route-id="@Model.CourseId" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger mx-1"><i class="bi bi-trash"></i> Delete</button>
+                </form>
             </div>
         </div>
     </div>
@@ -32,8 +32,8 @@
                 <div class="card-body">
                     <h5 class="card-title text-primary"><i class="bi bi-upload"></i> Course Materials</h5>
                     <p class="card-text">Upload and manage course materials for your students.</p>
-                    <a asp-action="UploadMaterial" asp-route-courseId="@Model.CourseId" class="btn btn-primary">
-                        <i class="bi bi-upload"></i> Upload
+                    <a asp-controller="Upload" asp-action="UploadMaterial" asp-route-courseId="@Model.CourseId" class="btn btn-outline-secondary">
+                        Upload Material
                     </a>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                 <div class="card-body">
                     <h5 class="card-title text-primary"><i class="bi bi-clipboard"></i> Quizzes</h5>
                     <p class="card-text">Create and manage quizzes to assess student learning.</p>
-                    <a asp-action="Create" asp-controller="Quiz" asp-route-courseId="@Model.CourseId" class="btn btn-primary">
+                    <a asp-action="CreateQuiz" asp-controller="Quiz" asp-route-courseId="@Model.CourseId" class="btn btn-outline-primary">
                         <i class="bi bi-plus-circle"></i> Create
                     </a>
                 </div>
@@ -58,7 +58,7 @@
                 <div class="card-body">
                     <h5 class="card-title text-primary"><i class="bi bi-megaphone"></i> Announcements</h5>
                     <p class="card-text">Communicate important updates and announcements to students.</p>
-                    <a asp-action="MakeAnnouncement" asp-route-courseId="@Model.CourseId" class="btn btn-primary">
+                    <a asp-action="MakeAnnouncement" asp-controller="Announce" asp-route-courseId="@Model.CourseId" class="btn btn-outline-info">
                         <i class="bi bi-megaphone"></i> Announce
                     </a>
                 </div>
@@ -87,7 +87,13 @@
                                 {
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <span><i class="bi bi-file-earmark-text"></i> @material.Description</span>
-                                        <a href="@Url.Content("~/Uploads/" + material.FilePath)" target="_blank" class="badge bg-primary">@material.FileType</a>
+                                        <div class="btn-group">
+                                            <a href="@Url.Content("~/Uploads/" + material.FilePath)" target="_blank" class="badge bg-primary">@material.FileType</a>
+                                            <a asp-action="EditMaterial" asp-controller="Upload" asp-route-id="@material.MaterialId" class="btn btn-outline-success btn-sm mx-1"><i class="bi bi-pencil"></i> Edit</a>
+                                            <form asp-action="DeleteMaterial" asp-controller="Upload" asp-route-id="@material.MaterialId" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm mx-1"><i class="bi bi-trash"></i> Delete</button>
+                                            </form>
+                                        </div>
                                     </li>
                                 }
                             </ul>
@@ -109,12 +115,19 @@
                                 {
                                     <li class="list-group-item list-group-item-@announcement.Type.ToLower()">
                                         <i class="bi bi-megaphone-fill"></i> @announcement.Content
+                                        <div class="btn-group">
+                                            <a asp-action="EditAnnouncement" asp-controller="Announce" asp-route-id="@announcement.AnnouncementId" class="btn btn-outline-success btn-sm mx-1"><i class="bi bi-pencil"></i> Edit</a>
+                                            <form asp-action="DeleteAnnouncement" asp-controller="Announce" asp-route-id="@announcement.AnnouncementId" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm mx-1"><i class="bi bi-trash"></i> Delete</button>
+                                            </form>
+                                        </div>
                                     </li>
                                 }
                             </ul>
                         </div>
                     </div>
                 </div>
+
                 <!-- Quizzes Section -->
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="quizzesHeading">
@@ -122,7 +135,7 @@
                             Quizzes
                         </button>
                     </h2>
-@*                     <div id="quizzesCollapse" class="accordion-collapse collapse" aria-labelledby="quizzesHeading" data-bs-parent="#courseDetailsAccordion">
+                    <div id="quizzesCollapse" class="accordion-collapse collapse" aria-labelledby="quizzesHeading" data-bs-parent="#courseDetailsAccordion">
                         <div class="accordion-body">
                             <ul class="list-group">
                                 @foreach (var quiz in Model.Quizzes)
@@ -131,9 +144,9 @@
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span><i class="bi bi-question-circle"></i> <strong>Quiz Title:</strong> @quiz.Title</span>
                                             <div class="btn-group">
-                                                <a asp-action="Edit" asp-route-id="@quiz.QuizId" class="btn btn-outline-success btn-sm mx-1"><i class="bi bi-pencil"></i> Edit</a>
-                                                <a asp-action="View" asp-route-id="@quiz.QuizId" class="btn btn-outline-info btn-sm mx-1"><i class="bi bi-eye"></i> View</a>
-                                                <form asp-action="Delete" asp-route-id="@quiz.QuizId" method="post" class="d-inline">
+                                                <a asp-action="EditQuiz" asp-controller="Quiz" asp-route-quizId="@quiz.QuizId" class="btn btn-outline-success btn-sm mx-1"><i class="bi bi-pencil"></i> Edit</a>
+                                                <a asp-action="DetailsQuiz" asp-controller="Quiz" asp-route-quizId="@quiz.QuizId" class="btn btn-outline-info btn-sm mx-1"><i class="bi bi-eye"></i> View</a>
+                                                <form asp-action="DeleteQuiz" asp-controller="Quiz" asp-route-quizId="@quiz.QuizId" method="post" class="d-inline">
                                                     <button type="submit" class="btn btn-outline-danger btn-sm mx-1"><i class="bi bi-trash"></i> Delete</button>
                                                 </form>
                                             </div>
@@ -142,7 +155,7 @@
                                 }
                             </ul>
                         </div>
-                    </div> *@
+                    </div>
                 </div>
             </div>
         </div>

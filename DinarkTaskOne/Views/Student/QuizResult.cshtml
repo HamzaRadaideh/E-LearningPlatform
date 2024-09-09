@@ -1,0 +1,57 @@
+﻿@model DinarkTaskOne.Models.MakeQuiz.AttemptModel
+
+<h2>Quiz Results: @Model.Quiz.Title</h2>
+
+<div class="container mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <h5 class="card-title text-primary">Quiz Results</h5>
+            <p class="card-text"><strong>Date Attempted:</strong> @Model.AttemptDate</p>
+            <hr />
+
+            <h6>Questions and Answers:</h6>
+
+            <!-- Loop through each question answered -->
+            <ul class="list-group">
+                @foreach (var questionAnswer in Model.QuestionAnswers)
+                {
+                        <li class="list-group-item">
+                            <strong>Question:</strong> @questionAnswer.Question.Text <br />
+
+                            <strong>Your Answer:</strong> @questionAnswer.SelectedOption.Text <br />
+
+                            <!-- Display correct answer with a check for MultipleAnswers type -->
+                            <strong>Correct Answer:</strong>
+                        @if (questionAnswer.Question.Type == DinarkTaskOne.Models.MakeQuiz.QuestionType.MultipleAnswers)
+                        {
+                                    <ul>
+                                @foreach (var correctAnswer in questionAnswer.Question.Answers.Where(a => a.IsCorrect))
+                                {
+                                                <li>@correctAnswer.Text</li>
+                                }
+                                    </ul>
+                        }
+                        else
+                        {
+                            @(questionAnswer.Question.Answers.First(a => a.IsCorrect).Text)
+                        }
+
+                            <!-- Highlight correct/incorrect answers with badges -->
+                        @if (questionAnswer.SelectedOption.IsCorrect)
+                        {
+                                    <span class="badge bg-success">Correct</span>
+                        }
+                        else
+                        {
+                                    <span class="badge bg-danger">Incorrect</span>
+                        }
+                        </li>
+                }
+            </ul>
+
+            <hr />
+            <p><strong>Total Score:</strong> @Model.Score</p>
+            <p>Your Score: @ViewBag.Score / @ViewBag.MaxScore</p>
+        </div>
+    </div>
+</div>

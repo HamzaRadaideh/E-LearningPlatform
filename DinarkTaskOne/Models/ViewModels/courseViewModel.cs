@@ -1,4 +1,5 @@
-﻿using DinarkTaskOne.Models.ManageCourse;
+﻿using DinarkTaskOne.Models.MakeQuiz;
+using DinarkTaskOne.Models.ManageCourse;
 
 namespace DinarkTaskOne.Models.ViewModels
 {
@@ -8,7 +9,7 @@ namespace DinarkTaskOne.Models.ViewModels
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public List<AnnouncementModel> AnnouncementModelData { get; set; } = [];
-        //public List<QuizModel> QuizModelData { get; set; } = new();
+        public List<QuizModel> Quizzes { get; set; } = []; // Add this property to hold the list of quizzes
         public List<MaterialsModel> MaterialsModelData { get; set; } = [];
     }
 }

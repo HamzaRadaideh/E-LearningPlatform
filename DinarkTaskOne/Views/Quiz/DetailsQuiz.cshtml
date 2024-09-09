@@ -1,0 +1,65 @@
+﻿@model DinarkTaskOne.Models.MakeQuiz.QuizModel
+
+<h2>Quiz Details: @Model.Title</h2>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Quiz: @Model.Title</h5>
+                    <p class="card-text">Duration: @Model.Duration</p>
+                    <p class="card-text">Number of Questions: @Model.NumberOfQuestions</p>
+                    <hr />
+                    <h6>Questions and Answers:</h6>
+                    <ul class="list-group">
+                        @foreach (var question in Model.Questions)
+                        {
+                            <li class="list-group-item">
+                                <strong>Question:</strong> @question.Text <br />
+                                <strong>Type:</strong> @question.Type <br />
+                                <strong>Marks:</strong> @question.Marks
+
+                                <!-- Display Answers -->
+                                <h6 class="mt-3">Answers:</h6>
+                                <ul class="list-group">
+                                    @foreach (var answer in question.Answers)
+                                    {
+                                        <li class="list-group-item">
+                                            @answer.Text
+                                            @if (answer.IsCorrect)
+                                            {
+                                                <span class="badge bg-success ms-2">Correct</span>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <!-- Edit Quiz Button -->
+            <a asp-action="EditQuiz" asp-controller="Quiz" asp-route-quizId="@Model.QuizId" class="btn btn-outline-success btn-sm mx-1">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+
+            <!-- Delete Quiz Button -->
+            <form asp-action="DeleteQuiz" asp-controller="Quiz" asp-route-quizId="@Model.QuizId" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger btn-sm mx-1">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </form>
+
+            <!-- Back to Course Config Button -->
+            <a asp-controller="Course" asp-action="CourseConfig" asp-route-id="@Model.CourseId" class="btn btn-outline-secondary">
+                <i class="bi bi-gear"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>

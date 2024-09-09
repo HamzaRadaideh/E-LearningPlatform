@@ -1,0 +1,54 @@
+﻿<form asp-action="SubmitOptions" method="post" class="form-horizontal">
+    <input type="hidden" name="QuestionId" value="@ViewBag.QuestionId" />
+    <input type="hidden" name="questionType" value="@ViewBag.QuestionType" /> <!-- Ensure questionType is passed -->
+    @if (ViewBag.QuestionType == "TrueFalse")
+    {
+        <!-- True/False Question -->
+        <div class="form-group">
+            <label>Option 1</label>
+            <input type="text" class="form-control" name="answerModels[0].Text" value="True" readonly />
+            <input type="hidden" name="answerModels[0].IsCorrect" value="true" />
+        </div>
+
+        <div class="form-group">
+            <label>Option 2</label>
+            <input type="text" class="form-control" name="answerModels[1].Text" value="False" readonly />
+            <input type="hidden" name="answerModels[1].IsCorrect" value="false" />
+        </div>
+    }
+    else if (ViewBag.QuestionType == "MultipleChoice")
+    {
+        <!-- Multiple Choice Question (Only one can be correct) -->
+        @for (int i = 0; i < 4; i++)
+        {
+            <div class="form-group">
+                <label>Option @(i + 1)</label>
+                <input type="text" class="form-control" name="answerModels[@i].Text" required />
+                <div class="form-check">
+                    <!-- All radio buttons must have the same name -->
+                    <input required class="form-check-input" type="radio" name="correctAnswer" value="@i" required />
+                    <label class="form-check-label">Is this the correct answer?</label>
+                </div>
+            </div>
+        }
+    }
+    else if (ViewBag.QuestionType == "MultipleAnswers")
+    {
+        <!-- Multiple Answers Question (Multiple can be correct) -->
+        @for (int i = 0; i < 5; i++)
+        {
+            <div class="form-group">
+                <label>Option @(i + 1)</label>
+                <input type="text" class="form-control" name="answerModels[@i].Text" required />
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="answerModels[@i].IsCorrect" value="true" />
+                    <label class="form-check-label">Is this a correct answer?</label>
+                </div>
+            </div>
+        }
+    }
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Add Options</button>
+    </div>
+</form>

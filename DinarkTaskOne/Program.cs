@@ -72,23 +72,24 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseSession();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.Use(async (context, next) =>
 {
-    var userIdString = context.Session.GetString("UserId");
-    // Ensure both context.User and context.User.Identity are not null
-    if (string.IsNullOrEmpty(userIdString) && context.User?.Identity?.IsAuthenticated == true)
+    // Ensure context.Session and context.User are not null
+    if (context.Session != null)
     {
-        await context.SignOutAsync("CustomScheme");
-        context.Response.Redirect("/Sign/Login");
-        return;
+        var userIdString = context.Session.GetString("UserId");
+
+        if (string.IsNullOrEmpty(userIdString) && context.User != null && context.User.Identity?.IsAuthenticated == true)
+        {
+            await context.SignOutAsync("CustomScheme");
+            context.Response.Redirect("/Sign/Login");
+            return;
+        }
     }
 
     await next();

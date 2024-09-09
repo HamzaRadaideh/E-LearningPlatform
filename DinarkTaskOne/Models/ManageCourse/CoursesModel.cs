@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using DinarkTaskOne.Models.MakeQuiz;
 using DinarkTaskOne.Models.UserSpecficModels;
 
 namespace DinarkTaskOne.Models.ManageCourse
@@ -18,13 +19,15 @@ namespace DinarkTaskOne.Models.ManageCourse
         public int InstructorId { get; set; }
 
         [ForeignKey("InstructorId")]
-        public virtual InstructorModel Instructor { get; set; } = null!;
+        public virtual InstructorModel Instructor { get; set; } = null!;  // Ensure Instructor is non-nullable
 
-        //public virtual ICollection<QuizModel> Quizzes { get; set; } = [];
+        // Include Quizzes
+        public virtual ICollection<QuizModel> Quizzes { get; set; } = [];  // Ensure it's initialized properly
+
+        // Existing collections
         public virtual ICollection<MaterialsModel> Materials { get; set; } = [];
         public virtual ICollection<EnrollModel> Enrollments { get; set; } = [];
         public virtual ICollection<AnnouncementModel> Announcements { get; set; } = [];
-        //public virtual ICollection<CourseGradeModel> CourseGrades { get; set; } = new List<CourseGradeModel>(); // Add this line
 
     }
 }

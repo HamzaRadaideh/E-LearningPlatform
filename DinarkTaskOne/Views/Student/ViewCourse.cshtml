@@ -4,8 +4,8 @@
     <!-- Header Section -->
     <div class="row align-items-center mb-4">
         <div class="col-md-12 text-center">
-            <h2 class="fw-bold text-primary">Course: @Model.MaterialsModelData.FirstOrDefault()?.Course.Title</h2>
-            <p class="text-muted">@Model.MaterialsModelData.FirstOrDefault()?.Course.Description</p>
+            <h2 class="fw-bold text-primary">Course: @Model.MaterialsModelData.FirstOrDefault()?.Course.Title @* ?? "Course Title" *@</h2>
+            <p class="text-muted">@Model.MaterialsModelData.FirstOrDefault()?.Course.Description @* ?? "Course Description" *@</p>
         </div>
     </div>
 
@@ -25,15 +25,22 @@
                     </h2>
                     <div id="materialsCollapse" class="accordion-collapse collapse show" aria-labelledby="materialsHeading" data-bs-parent="#courseContentAccordion">
                         <div class="accordion-body">
-                            <ul class="list-group">
-                                @foreach (var material in Model.MaterialsModelData)
-                                {
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span><i class="bi bi-file-earmark-text"></i> @material.Description</span>
-                                        <a href="@Url.Content("~/Uploads/" + material.FilePath)" target="_blank" class="badge bg-primary">@material.FileType</a>
-                                    </li>
-                                }
-                            </ul>
+                            @if (Model.MaterialsModelData.Any())
+                            {
+                                <ul class="list-group">
+                                    @foreach (var material in Model.MaterialsModelData)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="bi bi-file-earmark-text"></i> @material.Description</span>
+                                            <a href="@Url.Content("~/Uploads/" + material.FilePath)" target="_blank" class="badge bg-primary">@material.FileType</a>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No materials available.</p>
+                            }
                         </div>
                     </div>
                 </div>
@@ -47,20 +54,27 @@
                     </h2>
                     <div id="announcementsCollapse" class="accordion-collapse collapse" aria-labelledby="announcementsHeading" data-bs-parent="#courseContentAccordion">
                         <div class="accordion-body">
-                            <ul class="list-group">
-                                @foreach (var announcement in Model.AnnouncementModelData)
-                                {
-                                    <li class="list-group-item list-group-item-@announcement.Type.ToLower()">
-                                        <i class="bi bi-megaphone-fill"></i> @announcement.Content
-                                    </li>
-                                }
-                            </ul>
+                            @if (Model.AnnouncementModelData.Any())
+                            {
+                                <ul class="list-group">
+                                    @foreach (var announcement in Model.AnnouncementModelData)
+                                    {
+                                        <li class="list-group-item list-group-item-@announcement.Type.ToLower()">
+                                            <i class="bi bi-megaphone-fill"></i> @announcement.Content
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No announcements available.</p>
+                            }
                         </div>
                     </div>
                 </div>
 
                 <!-- Quizzes Section -->
-@*                 <div class="accordion-item">
+                <div class="accordion-item">
                     <h2 class="accordion-header" id="quizzesHeading">
                         <button class="accordion-button collapsed fw-bold text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#quizzesCollapse" aria-expanded="false" aria-controls="quizzesCollapse">
                             Quizzes
@@ -68,20 +82,28 @@
                     </h2>
                     <div id="quizzesCollapse" class="accordion-collapse collapse" aria-labelledby="quizzesHeading" data-bs-parent="#courseContentAccordion">
                         <div class="accordion-body">
-                            <ul class="list-group">
-                                @foreach (var quiz in Model.QuizModelData)
-                                {
-                                    <li class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-question-circle"></i> <strong>Quiz Title:</strong> @quiz.Title</span>
-                                            <a asp-action="QuizView" asp-controller="Progress" asp-route-quizId="@quiz.QuizId" class="btn btn-primary">Take Quiz</a>
-                                        </div>
-                                    </li>
-                                }
-                            </ul>
+                            @if (Model.Quizzes.Any())
+                            {
+                                <ul class="list-group">
+                                    @foreach (var quiz in Model.Quizzes)
+                                    {
+                                        <li class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span><i class="bi bi-question-circle"></i> <strong>Quiz Title:</strong> @quiz.Title</span>
+                                                <a asp-action="TakeQuiz" asp-controller="Student" asp-route-quizId="@quiz.QuizId" class="btn btn-primary">Take Quiz</a>
+                                            </div>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No quizzes available.</p>
+                            }
                         </div>
                     </div>
-                </div> *@
+                </div>
+
             </div>
         </div>
     </div>
