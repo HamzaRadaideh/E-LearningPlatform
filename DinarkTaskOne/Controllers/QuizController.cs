@@ -143,10 +143,10 @@ namespace DinarkTaskOne.Controllers
             {
                 answerModels[i].QuestionId = questionId;
 
-                // Differentiate between multiple-choice and multiple-answers
-                if (question.Type == QuestionType.MultipleChoice)
+                // Handle True/False and Multiple Choice differently
+                if (question.Type == QuestionType.MultipleChoice || question.Type == QuestionType.TrueFalse)
                 {
-                    // Set only the selected radio button option as correct for multiple-choice
+                    // Set only the selected radio button option as correct
                     answerModels[i].IsCorrect = (i == correctAnswer);
                 }
                 else if (question.Type == QuestionType.MultipleAnswers)
@@ -176,19 +176,19 @@ namespace DinarkTaskOne.Controllers
             return RedirectToAction("AddQuestions", new { quizId = question.QuizId });
         }
 
-
-
-        // 4. QuizComplete for the instructor
+        // 4. Quiz Complete
         public IActionResult QuizComplete(int quizId)
         {
             var quiz = context.Quizzes.Find(quizId);
             if (quiz == null) return NotFound("Quiz not found.");
 
             ViewBag.QuizTitle = quiz.Title;
+            ViewBag.CourseId = quiz.CourseId;
+
             return View();
         }
 
-        // 4. EditQuiz
+        // 5. EditQuiz
         [HttpGet]
         public async Task<IActionResult> EditQuiz(int quizId)
         {
@@ -219,21 +219,22 @@ namespace DinarkTaskOne.Controllers
             return RedirectToAction("QuizComplete", new { quizId = quiz.QuizId });
         }
 
-        // 5. DeleteQuiz
-
-        [HttpPost, ActionName("DeleteQuiz")]
-        public async Task<IActionResult> DeleteQuizConfirmed(int quizId)
+        // 6. DeleteQuiz
+        public async Task<IActionResult> DeleteQuiz(int id)
         {
-            var quiz = await context.Quizzes.FindAsync(quizId);
-            if (quiz == null) return NotFound("Quiz not found.");
+            var quiz = await context.Quizzes.FindAsync(id);
+            if (quiz == null)
+            {
+                return NotFound("Quiz not found.");
+            }
 
             context.Quizzes.Remove(quiz);
             await context.SaveChangesAsync();
 
-            return RedirectToAction("CourseConfig", "Course");
+            return RedirectToAction("CourseConfig","Course", new { id = quiz.CourseId });
         }
 
-        // 6. DetailsQuiz
+        // 7. DetailsQuiz
         [HttpGet]
         public async Task<IActionResult> DetailsQuiz(int quizId)
         {

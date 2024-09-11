@@ -29,5 +29,8 @@ namespace DinarkTaskOne.Models.MakeQuiz
         public virtual ICollection<QuestionModel> Questions { get; set; } = [];
 
         public virtual ICollection<AttemptModel> Attempts { get; set; } = [];
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
     }
 }

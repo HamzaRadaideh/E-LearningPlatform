@@ -20,7 +20,7 @@ namespace DinarkTaskOne.Controllers
             return int.Parse(userIdValue);
         }
 
-        // 1. Upload Course Material
+        // The view that returns the upload form when the page loads
         [HttpGet]
         public IActionResult UploadMaterial(int courseId)
         {
@@ -29,31 +29,61 @@ namespace DinarkTaskOne.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UploadMaterial(int courseId, IFormFile file, string fileType, string? description)
+        public async Task<IActionResult> UploadMaterial(int courseId, IFormFile file, string? description)
         {
-            var course = await context.Courses.FindAsync(courseId);
-            if (course == null)
+            // If no file is selected, return the form with validation errors
+            if (file == null || file.Length == 0)
             {
-                return NotFound("Course not found.");
+                ModelState.AddModelError("", "Please select a file.");
+                return View(); // Optionally pass ViewBag.CourseId to keep courseId in the view
             }
 
-            if (file != null && file.Length > 0)
+            try
             {
+                // Ensure the course belongs to the logged-in instructor
+                var instructorId = GetCurrentUserId();
+                var course = await context.Courses
+                    .Where(c => c.CourseId == courseId && c.InstructorId == instructorId)
+                    .FirstOrDefaultAsync();
+
+                if (course == null)
+                {
+                    return NotFound("Course not found or unauthorized access.");
+                }
+
+                // Define the folder for uploads
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads");
 
+                // Ensure the folder exists
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
                 }
 
-                var uniqueFileName = file.FileName;
+                // Check for acceptable file extensions (PDF and video formats)
+                var acceptableExtensions = new List<string> { ".pdf", ".mp4", ".webm", ".avi" };
+                var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+                if (!acceptableExtensions.Contains(fileExtension))
+                {
+                    ModelState.AddModelError("", "Invalid file type. Only PDF and video files (MP4, WebM, AVI) are allowed.");
+                    return View();
+                }
+
+                // Generate a unique file name to prevent conflicts
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileNameWithoutExtension(file.FileName) + fileExtension;
                 var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
+                // Save the file to the uploads folder
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
                 }
 
+                // Determine the file type based on the extension
+                string fileType = fileExtension == ".pdf" ? "PDF" : "Video";
+
+                // Create a new material record
                 var material = new MaterialsModel
                 {
                     CourseId = courseId,
@@ -62,11 +92,19 @@ namespace DinarkTaskOne.Controllers
                     Description = description
                 };
 
+                // Add the material to the database and save changes
                 context.Materials.Add(material);
                 await context.SaveChangesAsync();
-            }
 
-            return RedirectToAction("CourseConfig", "Course", new { id = courseId });
+                // Redirect back to course configuration after a successful upload
+                return RedirectToAction("CourseConfig", "Course", new { id = courseId });
+            }
+            catch (Exception ex)
+            {
+                // Log the error and return an error response
+                Console.WriteLine(ex.Message);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // 2. Edit Upload

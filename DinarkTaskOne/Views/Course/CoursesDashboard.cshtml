@@ -27,7 +27,6 @@
                             <h5 class="card-title text-primary fw-bold">@course.Title</h5>
                             <p class="card-text text-muted">@course.Description</p>
                             <div class="btn-group" role="group">
-
                                 <a asp-controller="Course" asp-action="EditCourse" asp-route-id="@course.CourseId" class="btn btn-outline-success mx-1">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
@@ -36,10 +35,9 @@
                                         <i class="bi bi-trash"></i> Delete
                                     </button>
                                 </form>
-                                <a asp-controller="Course" asp-action="CourseConfig" asp-route-id="@course.CourseId" class="btn btn-outline-success mx-1">
+                                <a asp-controller="Course" asp-action="CourseConfig" asp-route-id="@course.CourseId" class="btn btn-outline-primary mx-1">
                                     <i class="bi bi-gear"></i> Configure
                                 </a>
-
                             </div>
                         </div>
                     </div>

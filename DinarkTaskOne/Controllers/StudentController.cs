@@ -296,10 +296,18 @@ namespace DinarkTaskOne.Controllers
         [HttpGet]
         public async Task<IActionResult> ViewCourse(int courseId)
         {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdClaim, out int studentId))
+            {
+                return Unauthorized();
+            }
+
+            // Fetch the enrolled course and related data (materials, announcements, and quizzes)
             var course = await context.Courses
                 .Include(c => c.Materials)
                 .Include(c => c.Announcements)
-                .Include(c => c.Quizzes) // Include quizzes for the course
+                .Include(c => c.Quizzes)
+                .ThenInclude(q => q.Questions) // To get question marks
                 .FirstOrDefaultAsync(c => c.CourseId == courseId);
 
             if (course == null)
@@ -307,14 +315,40 @@ namespace DinarkTaskOne.Controllers
                 return NotFound("Course not found.");
             }
 
+            // Calculate the total quiz score for the student in this course
+            var combinedQuizScore = await context.Attempts
+                .Where(a => a.Quiz.CourseId == courseId && a.StudentId == studentId && a.Score.HasValue)
+                .SumAsync(a => a.Score.Value);
+
+            // Calculate the maximum possible score for quizzes in this course
+            var totalMaxScore = course.Quizzes
+                .Sum(q => q.Questions.Sum(qn => qn.Marks));
+
+            // Calculate the student's percentage score
+            var percentageScore = totalMaxScore > 0
+                ? (combinedQuizScore / (double)totalMaxScore) * 100
+                : 0;
+
+            // Combine and order the content (materials, announcements, and quizzes) by CreatedAt
+            var allContent = new List<dynamic>();
+
+            allContent.AddRange(course.Materials.Select(m => new { Type = "Material", CreatedAt = m.CreatedAt, Content = m }));
+            allContent.AddRange(course.Announcements.Select(a => new { Type = "Announcement", CreatedAt = a.CreatedAt, Content = a }));
+            allContent.AddRange(course.Quizzes.Select(q => new { Type = "Quiz", CreatedAt = q.CreatedAt, Content = q }));
+
+            // Sort the content by CreatedAt in descending order
+            var sortedContent = allContent.OrderByDescending(c => c.CreatedAt).ToList();
+
+            // Build the view model to pass to the view
             var viewModel = new CourseViewModel
             {
-                CourseId = course.CourseId,
+                CourseId = courseId,
                 Title = course.Title,
                 Description = course.Description,
-                AnnouncementModelData = course.Announcements?.ToList() ?? [],
-                MaterialsModelData = course.Materials?.ToList() ?? [],
-                Quizzes = course.Quizzes?.ToList() ?? [] // Include available quizzes in the view
+                SortedContent = sortedContent,
+                CombinedQuizScore = combinedQuizScore,
+                MaxPossibleScore = totalMaxScore,
+                PercentageScore = percentageScore // Add percentage score to the view model
             };
 
             return View(viewModel);

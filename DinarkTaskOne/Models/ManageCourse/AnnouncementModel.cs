@@ -19,5 +19,8 @@ namespace DinarkTaskOne.Models.ManageCourse
 
         [Required]
         public string Type { get; set; } = "Info"; // Can be "Info", "Warning", "Error", etc.
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
     }
 }

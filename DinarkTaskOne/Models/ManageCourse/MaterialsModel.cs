@@ -22,5 +22,8 @@ namespace DinarkTaskOne.Models.ManageCourse
         public string FileType { get; set; } = string.Empty;  // E.g., "PDF", "Video", "Link"
 
         public string? Description { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
     }
 }

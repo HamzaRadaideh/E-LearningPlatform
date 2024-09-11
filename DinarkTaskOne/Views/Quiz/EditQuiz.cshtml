@@ -1,39 +1,39 @@
-﻿@model DinarkTaskOne.Models.MakeQuiz.QuizModel
+﻿<div class="container mt-5">
+    <h2 class="text-primary mb-4">Edit Quiz: @Model.Title</h2>
 
-<h2>Edit Quiz</h2>
+    <form asp-action="EditQuiz" method="post" class="shadow-sm p-4 bg-white rounded">
+        <input type="hidden" name="QuizId" value="@Model.QuizId" />
 
-<form asp-action="EditQuiz" method="post" class="form-horizontal">
-    <input type="hidden" name="QuizId" value="@Model.QuizId" />
+        <!-- Quiz Title -->
+        <div class="mb-3">
+            <label for="Title" class="form-label fw-bold">Quiz Title</label>
+            <input type="text" class="form-control border-secondary" id="Title" name="Title" value="@Model.Title" placeholder="Enter quiz title" required />
+@*             <span asp-validation-for="Title" class="text-danger"></span>
+ *@        </div>
 
-    <div class="form-group">
-        <label for="Title" class="col-sm-2 control-label">Quiz Title</label>
-        <div class="col-sm-10">
-            <input type="text" class="form-control" id="Title" name="Title" value="@Model.Title" required />
-        </div>
-    </div>
+        <!-- Number of Questions -->
+        <div class="mb-3">
+            <label for="NumberOfQuestions" class="form-label fw-bold">Number of Questions</label>
+            <input type="number" class="form-control border-secondary" id="NumberOfQuestions" name="NumberOfQuestions" min="1" max="50" value="@Model.NumberOfQuestions" required />
+@*             <span asp-validation-for="NumberOfQuestions" class="text-danger"></span>
+ *@        </div>
 
-    <div class="form-group">
-        <label for="NumberOfQuestions" class="col-sm-2 control-label">Number of Questions</label>
-        <div class="col-sm-10">
-            <input type="number" class="form-control" id="NumberOfQuestions" name="NumberOfQuestions" min="1" max="50" value="@Model.NumberOfQuestions" required />
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label class="col-sm-2 control-label">Quiz Duration</label>
-        <div class="col-sm-10 row">
-            <div class="col-xs-6">
-                <input type="number" class="form-control" id="Minutes" name="Minutes" min="0" max="59" value="@Model.Duration.Minutes" required placeholder="Minutes" />
+        <!-- Quiz Duration -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Quiz Duration</label>
+            <div class="row">
+                <div class="col">
+                    <input type="number" class="form-control border-secondary" id="Minutes" name="Minutes" min="0" max="59" value="@Model.Duration.Minutes" placeholder="Minutes" required />
+                </div>
+                <div class="col">
+                    <input type="number" class="form-control border-secondary" id="Seconds" name="Seconds" min="0" max="59" value="@Model.Duration.Seconds" placeholder="Seconds" required />
+                </div>
             </div>
-            <div class="col-xs-6">
-                <input type="number" class="form-control" id="Seconds" name="Seconds" min="0" max="59" value="@Model.Duration.Seconds" required placeholder="Seconds" />
-            </div>
         </div>
-    </div>
 
-    <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-10">
-            <button type="submit" class="btn btn-primary">Update Quiz</button>
+        <!-- Submit Button -->
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary py-2">Update Quiz</button>
         </div>
-    </div>
-</form>
+    </form>
+</div>

@@ -2,19 +2,56 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="container">
-    <!-- Header Section -->
-    <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold text-primary">Welcome to E-Learning Platform</h1>
-        <img src="~/images/elearning-hero.png" alt="E-Learning Platform" class="img-fluid" style="max-height: 250px; object-fit: cover;" />
-        <p class="lead text-muted">Your gateway to a world of knowledge and learning.</p>
-    </div>
+<!-- Header Section -->
+<div class="text-center">
+    <h1 class="display-4 fw-bold text-primary" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);">Welcome to E-Learning Platform</h1>
+    <img src="~/images/elearning-hero.png" alt="E-Learning Platform" class="img-fluid" style="max-height: 200px; object-fit: cover;" />
+</div>
 
+
+
+<div class="container">
     <!-- Action Section -->
-    <div class="row justify-content-center text-center mb-4">
+    <div class="row text-center justify-content-center ">
+        <div class="alert @(
+                User.IsInRole("Student") ? "alert-success" :
+                User.IsInRole("Instructor") ? "alert-primary" :
+                User.IsInRole("Admin") ? "alert-danger" :
+                "alert-info"
+            ) p-4" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <i class="bi @(
+                            User.IsInRole("Student") ? "bi-person-check" :
+                            User.IsInRole("Instructor") ? "bi-person-badge" :
+                            User.IsInRole("Admin") ? "bi-shield-fill" :
+                            "bi-info-circle"
+                        ) display-4"></i>
+                </div>
+                <div>
+                    @if (User.IsInRole("Student"))
+                    {
+                        <p class="mb-0"><strong>Welcome back, Student!</strong> Check out your courses below.</p>
+                    }
+                    else if (User.IsInRole("Instructor"))
+                    {
+                        <p class="mb-0"><strong>Hello Instructor!</strong> Manage your courses and track your students.</p>
+                    }
+                    else if (User.IsInRole("Admin"))
+                    {
+                        <p class="mb-0"><strong>Welcome Admin!</strong> Oversee the platform and manage users.</p>
+                    }
+                    else
+                    {
+                        <p class="mb-0"><strong>Welcome to our platform!</strong> Sign up to start learning.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
         @if (User.Identity != null && User.Identity.IsAuthenticated)
         {
-            <div class="col-md-4 mb-3">
+            <div class="col-md-4 ">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Explore Courses</h5>
@@ -33,18 +70,18 @@
 
             @if (User.IsInRole("Student"))
             {
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 ">
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-body">
                             <h5 class="card-title text-primary">My Courses</h5>
-                            <p class="card-text">Access your enrolled courses and track your progress.</p>
+                            <p class="card-text">Access your courses and track your progress.</p>
                             <a class="btn btn-outline-primary" asp-controller="Student" asp-action="MyCourses">View My Courses</a>
                         </div>
                     </div>
                 </div>
             }
 
-            <div class="col-md-4 mb-3">
+            <div class="col-md-4 ">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Profile Settings</h5>
@@ -56,7 +93,18 @@
         }
         else
         {
-            <div class="col-md-5 mb-3">
+            <!-- Features Section -->
+            <div class="col-md-2 ">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <i class="bi bi-lightbulb-fill text-primary display-4"></i>
+                        <h5 class="card-title ">Innovative Learning</h5>
+                        <p class="card-text">Access the latest courses designed by industry experts.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-2 ">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Join Our Community</h5>
@@ -66,7 +114,17 @@
                 </div>
             </div>
 
-            <div class="col-md-5 mb-3">
+            <div class="col-md-2 ">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <i class="bi bi-people-fill text-primary display-4"></i>
+                        <h5 class="card-title ">Community Driven</h5>
+                        <p class="card-text">Join a community of learners and share your knowledge.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-2 ">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Already a Member?</h5>
@@ -75,25 +133,19 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-2 ">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <i class="bi bi-shield-fill-check text-primary display-4"></i>
+                        <h5 class="card-title ">Secure and Reliable</h5>
+                        <p class="card-text">Learn with confidence knowing your data is protected.</p>
+                    </div>
+                </div>
+            </div>
         }
     </div>
+    <p class="lead mt-1 text-center text-muted">Your gateway to a world of knowledge and learning.</p>
 
-    <!-- Features Section -->
-    <div class="row mt-5 text-center justify-content-center">
-        <div class="col-md-4 mb-3">
-            <i class="bi bi-lightbulb-fill text-primary display-4 mb-3"></i>
-            <h5>Innovative Learning</h5>
-            <p>Access the latest courses designed by industry experts.</p>
-        </div>
-        <div class="col-md-4 mb-3">
-            <i class="bi bi-people-fill text-primary display-4 mb-3"></i>
-            <h5>Community Driven</h5>
-            <p>Join a community of learners and share your knowledge.</p>
-        </div>
-        <div class="col-md-4 mb-3">
-            <i class="bi bi-shield-fill-check text-primary display-4 mb-3"></i>
-            <h5>Secure and Reliable</h5>
-            <p>Learn with confidence knowing your data is protected.</p>
-        </div>
-    </div>
 </div>
+

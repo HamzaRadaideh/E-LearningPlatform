@@ -1,32 +1,36 @@
-﻿<form asp-action="SubmitOptions" method="post" class="form-horizontal">
+﻿<form asp-action="SubmitOptions" method="post" class="p-4 shadow-sm bg-white rounded">
     <input type="hidden" name="QuestionId" value="@ViewBag.QuestionId" />
-    <input type="hidden" name="questionType" value="@ViewBag.QuestionType" /> <!-- Ensure questionType is passed -->
+    <input type="hidden" name="questionType" value="@ViewBag.QuestionType" />
+
     @if (ViewBag.QuestionType == "TrueFalse")
     {
-        <!-- True/False Question -->
-        <div class="form-group">
-            <label>Option 1</label>
-            <input type="text" class="form-control" name="answerModels[0].Text" value="True" readonly />
-            <input type="hidden" name="answerModels[0].IsCorrect" value="true" />
+        <div class="mb-3">
+            <label for="trueOption" class="form-label fw-bold">Option 1: True</label>
+            <input type="text" id="trueOption" class="form-control" name="answerModels[0].Text" value="True" readonly />
+            <div class="form-check mt-2">
+                <input required class="form-check-input" type="radio" name="correctAnswer" value="0" />
+                <label class="form-check-label">Is this the correct answer?</label>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label>Option 2</label>
-            <input type="text" class="form-control" name="answerModels[1].Text" value="False" readonly />
-            <input type="hidden" name="answerModels[1].IsCorrect" value="false" />
+        <div class="mb-3">
+            <label for="falseOption" class="form-label fw-bold">Option 2: False</label>
+            <input type="text" id="falseOption" class="form-control" name="answerModels[1].Text" value="False" readonly />
+            <div class="form-check mt-2">
+                <input required class="form-check-input" type="radio" name="correctAnswer" value="1" />
+                <label class="form-check-label">Is this the correct answer?</label>
+            </div>
         </div>
     }
     else if (ViewBag.QuestionType == "MultipleChoice")
     {
-        <!-- Multiple Choice Question (Only one can be correct) -->
         @for (int i = 0; i < 4; i++)
         {
-            <div class="form-group">
-                <label>Option @(i + 1)</label>
-                <input type="text" class="form-control" name="answerModels[@i].Text" required />
-                <div class="form-check">
-                    <!-- All radio buttons must have the same name -->
-                    <input required class="form-check-input" type="radio" name="correctAnswer" value="@i" required />
+            <div class="mb-3">
+                <label for="option@i" class="form-label fw-bold">Option @(i + 1)</label>
+                <input type="text" id="option@i" class="form-control" name="answerModels[@i].Text" required />
+                <div class="form-check mt-2">
+                    <input required class="form-check-input" type="radio" name="correctAnswer" value="@i" />
                     <label class="form-check-label">Is this the correct answer?</label>
                 </div>
             </div>
@@ -34,13 +38,12 @@
     }
     else if (ViewBag.QuestionType == "MultipleAnswers")
     {
-        <!-- Multiple Answers Question (Multiple can be correct) -->
         @for (int i = 0; i < 5; i++)
         {
-            <div class="form-group">
-                <label>Option @(i + 1)</label>
-                <input type="text" class="form-control" name="answerModels[@i].Text" required />
-                <div class="form-check">
+            <div class="mb-3">
+                <label for="option@i" class="form-label fw-bold">Option @(i + 1)</label>
+                <input type="text" id="option@i" class="form-control" name="answerModels[@i].Text" required />
+                <div class="form-check mt-2">
                     <input class="form-check-input" type="checkbox" name="answerModels[@i].IsCorrect" value="true" />
                     <label class="form-check-label">Is this a correct answer?</label>
                 </div>
@@ -48,7 +51,7 @@
         }
     }
 
-    <div class="form-group">
+    <div class="d-grid">
         <button type="submit" class="btn btn-primary">Add Options</button>
     </div>
 </form>

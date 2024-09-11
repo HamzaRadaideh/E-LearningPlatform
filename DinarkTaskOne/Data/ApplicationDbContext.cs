@@ -6,8 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DinarkTaskOne.Data
 {
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
+    public class ApplicationDbContext : DbContext
     {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         // DbSets for Authentication and Authorization
         public DbSet<UsersModel> Users { get; set; } = null!;
@@ -20,12 +21,17 @@ namespace DinarkTaskOne.Data
         public DbSet<MaterialsModel> Materials { get; set; } = null!;
         public DbSet<AnnouncementModel> Announcements { get; set; } = null!;
 
-        // DbSets for the Quiz System
+        // DbSets for Quiz System
         public DbSet<QuizModel> Quizzes { get; set; } = null!;
         public DbSet<QuestionModel> Questions { get; set; } = null!;
         public DbSet<AnswerModel> Answers { get; set; } = null!;
         public DbSet<AttemptModel> Attempts { get; set; } = null!;
         public DbSet<QuestionAnswerModel> QuestionAnswers { get; set; } = null!;
+
+        // Add DbSets for User-Specific Models
+        public DbSet<StudentModel> Students { get; set; } = null!;  // Student-specific DbSet
+        public DbSet<InstructorModel> Instructors { get; set; } = null!;
+        public DbSet<AdminModel> Admins { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -108,19 +114,19 @@ namespace DinarkTaskOne.Data
                 .HasOne(qa => qa.Attempt)
                 .WithMany(a => a.QuestionAnswers)
                 .HasForeignKey(qa => qa.AttemptId)
-                .OnDelete(DeleteBehavior.Cascade);  
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<QuestionAnswerModel>()
                 .HasOne(qa => qa.Question)
                 .WithMany(q => q.QuestionAnswers)
                 .HasForeignKey(qa => qa.QuestionId)
-                .OnDelete(DeleteBehavior.Restrict);  
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<QuestionAnswerModel>()
                 .HasOne(qa => qa.SelectedOption)
                 .WithMany()
                 .HasForeignKey(qa => qa.SelectedOptionId)
-                .OnDelete(DeleteBehavior.Restrict); 
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

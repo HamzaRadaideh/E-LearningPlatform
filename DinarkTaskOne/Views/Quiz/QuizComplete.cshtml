@@ -1,9 +1,20 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿<div class="container mt-5">
+    <div class="alert alert-success shadow-sm text-center">
+        <h2 class="text-primary">Quiz Created Successfully!</h2>
+        <p class="lead">The quiz <strong>@ViewBag.QuizTitle</strong> has been successfully created and saved with all its questions and options.</p>
+    </div>
 
-<h2>Quiz "@ViewBag.QuizTitle" Created Successfully!</h2>
-<p>The quiz has been created and saved with all questions and options.</p>
-<a href="@Url.Action("Index", "Home")" class="btn btn-primary">Go to Home</a>
+    <p>CourseId: @ViewBag.CourseId</p>
+
+    <div class="text-center mt-4">
+        <!-- Button to Go Back to Course Config -->
+        <a asp-controller="Course" asp-action="CourseConfig" asp-route-id="@ViewBag.CourseId" class="btn btn-outline-secondary btn-lg">
+            <i class="bi bi-gear"></i> Back to Course Configuration
+        </a>
+
+        <!-- Button to Go to Home -->
+        <a href="@Url.Action("Index", "Home")" class="btn btn-primary btn-lg ms-2">
+            <i class="bi bi-house"></i> Go to Home
+        </a>
+    </div>
+</div>

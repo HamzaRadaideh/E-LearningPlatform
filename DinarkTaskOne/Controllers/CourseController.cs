@@ -10,7 +10,6 @@ namespace DinarkTaskOne.Controllers
     [Authorize(Roles = "Instructor")]
     public class CourseController(ApplicationDbContext context) : Controller
     {
-
         // Helper methods to get the current user's ID and role
         private int GetCurrentUserId()
         {
@@ -80,7 +79,6 @@ namespace DinarkTaskOne.Controllers
             return RedirectToAction("CourseConfig", new { id = course.CourseId });
         }
 
-
         // 3. Delete Course
         [HttpPost]
         public async Task<IActionResult> DeleteCourse(int id)
@@ -107,8 +105,6 @@ namespace DinarkTaskOne.Controllers
 
             return RedirectToAction("CoursesDashboard");
         }
-
-
 
         // 4. View Enrolled Students
         [HttpGet]
@@ -140,22 +136,35 @@ namespace DinarkTaskOne.Controllers
         }
 
         // 6. Course Configuration
-        [HttpGet]
-        public async Task<IActionResult> CourseConfig(int id)
+        public IActionResult CourseConfig(int id)
         {
-            var course = await context.Courses
-                .Include(c => c.Enrollments)
+            var course = context.Courses
                 .Include(c => c.Materials)
-                .Include(c => c.Quizzes)
                 .Include(c => c.Announcements)
-                .FirstOrDefaultAsync(c => c.CourseId == id && c.InstructorId == GetCurrentUserId());
+                .Include(c => c.Quizzes)
+                .FirstOrDefault(c => c.CourseId == id);
 
             if (course == null)
             {
-                return NotFound("Course not found or unauthorized access.");
+                return NotFound("Course not found.");
             }
+
+            // Combine materials, announcements, and quizzes into a single list and sort by CreatedAt
+            var allContent = new List<dynamic>();
+
+            allContent.AddRange(course.Materials.Select(m => new { Type = "Material", CreatedAt = m.CreatedAt, Content = m }));
+            allContent.AddRange(course.Announcements.Select(a => new { Type = "Announcement", CreatedAt = a.CreatedAt, Content = a }));
+            allContent.AddRange(course.Quizzes.Select(q => new { Type = "Quiz", CreatedAt = q.CreatedAt, Content = q }));
+
+            // Sort by CreatedAt in descending order
+            var sortedContent = allContent.OrderByDescending(c => c.CreatedAt).ToList();
+
+            // Pass the sorted content to the view
+            ViewBag.SortedContent = sortedContent;
 
             return View(course);
         }
+
+
     }
 }
