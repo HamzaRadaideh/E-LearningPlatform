@@ -39,12 +39,17 @@ namespace DinarkTaskOne.Controllers
                 return View(course);
             }
 
+            // Set CreatedAt and UpdatedAt fields
+            course.CreatedAt = DateTime.UtcNow;
+            course.UpdatedAt = DateTime.UtcNow;
             course.InstructorId = instructorId;
+
             context.Courses.Add(course);
             await context.SaveChangesAsync();
 
             return RedirectToAction("CourseConfig", new { id = course.CourseId });
         }
+
 
         // 2. Edit Course
         [HttpGet]
@@ -73,6 +78,8 @@ namespace DinarkTaskOne.Controllers
 
             existingCourse.Title = course.Title;
             existingCourse.Description = course.Description;
+            existingCourse.UpdatedAt = DateTime.UtcNow; // Update timestamp
+
             context.Courses.Update(existingCourse);
             await context.SaveChangesAsync();
 
@@ -94,7 +101,7 @@ namespace DinarkTaskOne.Controllers
             }
 
             // Remove related enrollments first
-            if (course.Enrollments.Any())
+            if (course.Enrollments.Count != 0)
             {
                 context.Enrollments.RemoveRange(course.Enrollments);
             }
@@ -152,9 +159,9 @@ namespace DinarkTaskOne.Controllers
             // Combine materials, announcements, and quizzes into a single list and sort by CreatedAt
             var allContent = new List<dynamic>();
 
-            allContent.AddRange(course.Materials.Select(m => new { Type = "Material", CreatedAt = m.CreatedAt, Content = m }));
-            allContent.AddRange(course.Announcements.Select(a => new { Type = "Announcement", CreatedAt = a.CreatedAt, Content = a }));
-            allContent.AddRange(course.Quizzes.Select(q => new { Type = "Quiz", CreatedAt = q.CreatedAt, Content = q }));
+            allContent.AddRange(course.Materials.Select(m => new { Type = "Material", m.CreatedAt, Content = m }));
+            allContent.AddRange(course.Announcements.Select(a => new { Type = "Announcement", a.CreatedAt, Content = a }));
+            allContent.AddRange(course.Quizzes.Select(q => new { Type = "Quiz", q.CreatedAt, Content = q }));
 
             // Sort by CreatedAt in descending order
             var sortedContent = allContent.OrderByDescending(c => c.CreatedAt).ToList();

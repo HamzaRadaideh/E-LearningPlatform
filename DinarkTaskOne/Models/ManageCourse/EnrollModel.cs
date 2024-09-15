@@ -19,5 +19,12 @@ namespace DinarkTaskOne.Models.ManageCourse
 
         [ForeignKey("StudentId")]
         public virtual StudentModel Student { get; set; } = null!;
+
+        // New fields
+        public DateTime EnrolledAt { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        [MaxLength(20)]
+        public string Status { get; set; } = "Active"; // Default status
     }
 }

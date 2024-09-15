@@ -104,18 +104,24 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white py-4">
+    <footer class="bg-dark text-white">
         <div class="container">
             <div class="row">
                 <!-- About Us Section -->
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <h6 class="text-warning fw-bold mb-3">About Us</h6>
-                    <p class="small">Empowering learners with high-quality content and engaging online courses. Our platform brings education to your fingertips, anytime, anywhere.</p>
-                </div>
+                <div class="col-md-6 row">
+                    <h6 class="text-warning fw-bold">About us</h6>
+                    <div class="col-md-6 ">
+                        <img src="~/images/elearning-hero.png" alt="E-Learning Platform" class="img-fluid" style="max-height: 200px; object-fit: cover;" />
+                    </div>
+                    <div class="col-md-5 ">
+                        <p class="small">@* Empowering learners with high-quality content and engaging online courses. *@
+                            Our platform brings education to your fingertips, anytime, anywhere.</p>
+                    </div>
+                </div>                
 
                 <!-- Quick Links Section -->
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <h6 class="text-warning fw-bold mb-3">Quick Links</h6>
+                <div class="col-md-2 ">
+                    <h6 class="text-warning fw-bold ">Quick Links</h6>
                     <ul class="list-unstyled small">
                         <li><a class="text-white" asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
                         <li><a class="text-white" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy Policy</a></li>
@@ -125,16 +131,18 @@
 
                 <!-- Follow Us Section -->
                 <div class="col-md-4">
-                    <h6 class="text-warning fw-bold mb-3">Follow Us</h6>
+                    <h6 class="text-warning fw-bold">Follow Us</h6>
                     <div class="d-flex">
                         <a href="#" class="text-white me-3" aria-label="Facebook"><i class="bi bi-facebook fs-4"></i></a>
                         <a href="#" class="text-white me-3" aria-label="Twitter"><i class="bi bi-twitter fs-4"></i></a>
                         <a href="#" class="text-white" aria-label="Instagram"><i class="bi bi-instagram fs-4"></i></a>
                     </div>
-                    <p class="small">Stay connected for updates and new course releases.</p>
+                    <p class="small">
+                        Stay connected for updates <br />
+                        and new course releases. </p>
                 </div>
             </div>
-            <div class="text-center small mt-3">
+            <div class="text-center small">
                 &copy; 2024 - DinarakTaskOne. All Rights Reserved. | <a href="#" class="text-warning">Terms of Service</a> | <a href="#" class="text-warning">Contact Us</a>
             </div>
         </div>

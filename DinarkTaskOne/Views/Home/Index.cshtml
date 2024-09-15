@@ -2,15 +2,13 @@
     ViewData["Title"] = "Home Page";
 }
 
-<!-- Header Section -->
-<div class="text-center">
-    <h1 class="display-4 fw-bold text-primary" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);">Welcome to E-Learning Platform</h1>
-    <img src="~/images/elearning-hero.png" alt="E-Learning Platform" class="img-fluid" style="max-height: 200px; object-fit: cover;" />
-</div>
-
-
-
 <div class="container">
+    <!-- Header Section -->
+    <div class="text-center">
+        <h1 class="display-4 fw-bold text-primary" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);">Welcome to E-Learning Platform</h1>
+        <img src="~/images/elearning-hero.png" alt="E-Learning Platform" class="img-fluid" style="max-height: 200px; object-fit: cover;" />
+    </div>
+
     <!-- Action Section -->
     <div class="row text-center justify-content-center ">
         <div class="alert @(
@@ -31,19 +29,19 @@
                 <div>
                     @if (User.IsInRole("Student"))
                     {
-                        <p class="mb-0"><strong>Welcome back, Student!</strong> Check out your courses below.</p>
+                        <p class=""><strong>Welcome back, Student!</strong> Check out your courses below.</p>
                     }
                     else if (User.IsInRole("Instructor"))
                     {
-                        <p class="mb-0"><strong>Hello Instructor!</strong> Manage your courses and track your students.</p>
+                        <p class=""><strong>Hello Instructor!</strong> Manage your courses and track your students.</p>
                     }
                     else if (User.IsInRole("Admin"))
                     {
-                        <p class="mb-0"><strong>Welcome Admin!</strong> Oversee the platform and manage users.</p>
+                        <p class=""><strong>Welcome Admin!</strong> Oversee the platform and manage users.</p>
                     }
                     else
                     {
-                        <p class="mb-0"><strong>Welcome to our platform!</strong> Sign up to start learning.</p>
+                        <p class=""><strong>Welcome to our platform!</strong> Sign up to start learning.</p>
                     }
                 </div>
             </div>
@@ -51,7 +49,7 @@
 
         @if (User.Identity != null && User.Identity.IsAuthenticated)
         {
-            <div class="col-md-4 ">
+            <div class="col-md-4 mb-2">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Explore Courses</h5>
@@ -70,7 +68,7 @@
 
             @if (User.IsInRole("Student"))
             {
-                <div class="col-md-4 ">
+                <div class="col-md-4 mb-2">
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-body">
                             <h5 class="card-title text-primary">My Courses</h5>
@@ -81,7 +79,7 @@
                 </div>
             }
 
-            <div class="col-md-4 ">
+            <div class="col-md-4 mb-2">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Profile Settings</h5>
@@ -94,7 +92,7 @@
         else
         {
             <!-- Features Section -->
-            <div class="col-md-2 ">
+            <div class="col-md-2 mb-2">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <i class="bi bi-lightbulb-fill text-primary display-4"></i>
@@ -104,7 +102,7 @@
                 </div>
             </div>
 
-            <div class="col-md-2 ">
+            <div class="col-md-2 mb-2">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Join Our Community</h5>
@@ -114,7 +112,7 @@
                 </div>
             </div>
 
-            <div class="col-md-2 ">
+            <div class="col-md-2 mb-2">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <i class="bi bi-people-fill text-primary display-4"></i>
@@ -124,7 +122,7 @@
                 </div>
             </div>
 
-            <div class="col-md-2 ">
+            <div class="col-md-2 mb-2">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h5 class="card-title text-primary">Already a Member?</h5>
@@ -134,7 +132,7 @@
                 </div>
             </div>
 
-            <div class="col-md-2 ">
+            <div class="col-md-2 mb-2">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <i class="bi bi-shield-fill-check text-primary display-4"></i>
@@ -145,7 +143,7 @@
             </div>
         }
     </div>
-    <p class="lead mt-1 text-center text-muted">Your gateway to a world of knowledge and learning.</p>
+    <p class="lead mt-4 text-center text-muted"> Your gateway to a world of knowledge and learning.</p>
 
 </div>
 

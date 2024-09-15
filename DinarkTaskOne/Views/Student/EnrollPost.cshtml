@@ -1,38 +1,32 @@
-﻿@model DinarkTaskOne.Models.ManageCourse.CourseModel
-
-@{
-    ViewBag.Title = "Confirm Enrollment";
-}
-
-<div class="container mt-5">
+﻿<div class="container mt-5">
     @if (Model != null)
     {
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0">Confirm Enrollment</h3>
-                </div>
-                <div class="card-body">
-                    <h5 class="fw-bold">@Model.Title</h5>
-                    <p class="text-muted">@Model.Description</p>
-                    <p><strong>Instructor:</strong> @Model.Instructor.FirstName @Model.Instructor.LastName</p>
-                    <p><strong>Students Enrolled:</strong> @Model.Enrollments.Count</p>
-
-                    <form asp-action="ConfirmEnrollment" method="post">
-                        <input type="hidden" name="courseId" value="@Model.CourseId" />
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success">Confirm Enrollment</button>
-                            <a href="@Url.Action("Enroll", "Student", new { courseId = Model.CourseId })" class="btn btn-outline-danger">Cancel</a>
-                        </div>
-                    </form>
-                </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Confirm Enrollment</h3>
             </div>
+            <div class="card-body">
+                <h5 class="fw-bold">@Model.Title</h5>
+                <p class="text-muted">@Model.Description</p>
+                <p><strong>Instructor:</strong> @Model.Instructor.FirstName @Model.Instructor.LastName</p>
+                <p><strong>Students Enrolled:</strong> @Model.Enrollments.Count</p>
+
+                <form asp-action="ConfirmEnrollment" method="post">
+                    <input type="hidden" name="courseId" value="@Model.CourseId" />
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">Confirm Enrollment</button>
+                        <a href="@Url.Action("Enroll", "Student", new { courseId = Model.CourseId })" class="btn btn-outline-danger">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
     }
     else
     {
-            <div class="alert alert-danger text-center">
-                <h4>Course Not Found</h4>
-                <p>The course you are trying to enroll in does not exist or has been removed.</p>
-                <a href="@Url.Action("Enroll", "Student")" class="btn btn-primary">Go Back</a>
-            </div>
+        <div class="alert alert-danger text-center">
+            <h4>Course Not Found</h4>
+            <p>The course you are trying to enroll in does not exist or has been removed.</p>
+            <a href="@Url.Action("Enroll", "Student")" class="btn btn-primary">Go Back</a>
+        </div>
     }
 </div>

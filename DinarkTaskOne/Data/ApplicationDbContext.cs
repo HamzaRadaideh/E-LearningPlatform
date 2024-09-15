@@ -1,7 +1,8 @@
-﻿using DinarkTaskOne.Models.UserSpecficModels;
-using DinarkTaskOne.Models.Authentication_Authorization;
-using DinarkTaskOne.Models.ManageCourse;
+﻿using DinarkTaskOne.Models.Authentication_Authorization;
+using DinarkTaskOne.Models.Institution;
 using DinarkTaskOne.Models.MakeQuiz;
+using DinarkTaskOne.Models.ManageCourse;
+using DinarkTaskOne.Models.UserSpecficModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace DinarkTaskOne.Data
@@ -28,16 +29,20 @@ namespace DinarkTaskOne.Data
         public DbSet<AttemptModel> Attempts { get; set; } = null!;
         public DbSet<QuestionAnswerModel> QuestionAnswers { get; set; } = null!;
 
-        // Add DbSets for User-Specific Models
-        public DbSet<StudentModel> Students { get; set; } = null!;  // Student-specific DbSet
+        // DbSets for User-Specific Models
+        public DbSet<StudentModel> Students { get; set; } = null!;
         public DbSet<InstructorModel> Instructors { get; set; } = null!;
         public DbSet<AdminModel> Admins { get; set; } = null!;
+
+        // DbSets for Departments and Majors
+        public DbSet<DepartmentModel> Departments { get; set; } = null!;
+        public DbSet<MajorModel> Majors { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configuring the RolesModel
+            // Roles
             modelBuilder.Entity<RolesModel>()
                 .Property(r => r.RoleId)
                 .ValueGeneratedNever();
@@ -48,7 +53,7 @@ namespace DinarkTaskOne.Data
                 new RolesModel { RoleId = 3, RoleName = "Admin" }
             );
 
-            // Configuring UsersModel with Discriminator for different user types
+            // UsersModel configuration with Discriminator
             modelBuilder.Entity<UsersModel>()
                 .ToTable("Users")
                 .HasDiscriminator<string>("UserType")
@@ -57,64 +62,58 @@ namespace DinarkTaskOne.Data
                 .HasValue<InstructorModel>("Instructor")
                 .HasValue<AdminModel>("Admin");
 
-            // Configuring Course relationships
+            // Course relationships
             modelBuilder.Entity<CourseModel>()
                 .HasOne(c => c.Instructor)
                 .WithMany(i => i.Courses)
                 .HasForeignKey(c => c.InstructorId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<CourseModel>()
-                .HasMany(c => c.Materials)
-                .WithOne(m => m.Course)
-                .HasForeignKey(m => m.CourseId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<CourseModel>()
-                .HasMany(c => c.Enrollments)
-                .WithOne(e => e.Course)
-                .HasForeignKey(e => e.CourseId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Configuring Quiz relationships
-            modelBuilder.Entity<QuizModel>()
-                .HasMany(q => q.Questions)
-                .WithOne(q => q.Quiz)
-                .HasForeignKey(q => q.QuizId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<CourseModel>()
+                .HasOne(c => c.Department)
+                .WithMany(d => d.Courses)
+                .HasForeignKey(c => c.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            // Configuring Question relationships
-            modelBuilder.Entity<QuestionModel>()
-                .HasMany(q => q.Answers)
-                .WithOne(a => a.Question)
-                .HasForeignKey(a => a.QuestionId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<CourseModel>()
+                .HasMany(c => c.AllowedMajors)
+                .WithMany(m => m.Courses)
+                .UsingEntity(j => j.ToTable("CourseMajors"));
 
-            modelBuilder.Entity<QuestionModel>()
-                .HasMany(q => q.QuestionAnswers)
-                .WithOne(qa => qa.Question)
-                .HasForeignKey(qa => qa.QuestionId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // Major and Department relationships
+            modelBuilder.Entity<MajorModel>()
+                .HasOne(m => m.Department)
+                .WithMany(d => d.Majors)
+                .HasForeignKey(m => m.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            // Configuring Attempt relationships
-            modelBuilder.Entity<AttemptModel>()
-                .HasOne(a => a.Quiz)
-                .WithMany(q => q.Attempts)
-                .HasForeignKey(a => a.QuizId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // Instructor and Department relationship
+            modelBuilder.Entity<InstructorModel>()
+                .HasOne(i => i.Department)
+                .WithMany(d => d.Instructors)
+                .HasForeignKey(i => i.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            // Student and Major relationship
+            modelBuilder.Entity<StudentModel>()
+                .HasOne(s => s.Major)
+                .WithMany(m => m.Students)
+                .HasForeignKey(s => s.MajorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Attempt relationships
             modelBuilder.Entity<AttemptModel>()
                 .HasOne(a => a.Student)
                 .WithMany(s => s.Attempts)
                 .HasForeignKey(a => a.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Configuring QuestionAnswer relationships
+            // QuestionAnswer relationships
             modelBuilder.Entity<QuestionAnswerModel>()
                 .HasOne(qa => qa.Attempt)
                 .WithMany(a => a.QuestionAnswers)
                 .HasForeignKey(qa => qa.AttemptId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<QuestionAnswerModel>()
                 .HasOne(qa => qa.Question)
@@ -127,6 +126,33 @@ namespace DinarkTaskOne.Data
                 .WithMany()
                 .HasForeignKey(qa => qa.SelectedOptionId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+
+            // EnrollModel relationships
+            modelBuilder.Entity<EnrollModel>()
+                .HasOne(e => e.Course)
+                .WithMany(c => c.Enrollments)
+                .HasForeignKey(e => e.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EnrollModel>()
+                .HasOne(e => e.Student)
+                .WithMany(s => s.Enrollments)
+                .HasForeignKey(e => e.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Seed default departments and majors
+            modelBuilder.Entity<DepartmentModel>().HasData(
+                new DepartmentModel { DepartmentId = 1, Name = "Computer Science" },
+                new DepartmentModel { DepartmentId = 2, Name = "Information Systems" },
+                new DepartmentModel { DepartmentId = 3, Name = "Cyber Security" }
+            );
+
+            modelBuilder.Entity<MajorModel>().HasData(
+                new MajorModel { MajorId = 1, Name = "Computer Science", DepartmentId = 1 },
+                new MajorModel { MajorId = 2, Name = "Information Systems", DepartmentId = 2 },
+                new MajorModel { MajorId = 3, Name = "Cyber Security", DepartmentId = 3 }
+            );
         }
     }
 }

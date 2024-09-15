@@ -1,18 +1,24 @@
 ﻿using DinarkTaskOne.Models.Authentication_Authorization;
+using DinarkTaskOne.Models.Institution;
 using DinarkTaskOne.Models.MakeQuiz;
 using DinarkTaskOne.Models.ManageCourse;
 
-public class StudentModel : UsersModel
+namespace DinarkTaskOne.Models.UserSpecficModels
 {
-    // Collection to keep track of course enrollments
-    public virtual ICollection<EnrollModel> Enrollments { get; set; } = [];
-    public virtual ICollection<AttemptModel> Attempts { get; set; } = [];
-
-    // Method to count the number of quiz attempts with a score for a specific course
-    public int GetQuizAttemptsCount(int courseId)
+    public class StudentModel : UsersModel
     {
-        return Attempts
-            .Where(a => a.Quiz.CourseId == courseId && a.Score.HasValue)
-            .Count();
+        public int MajorId { get; set; }
+        public MajorModel Major { get; set; } = null!;
+
+        public ICollection<EnrollModel> Enrollments { get; set; } = new List<EnrollModel>();
+        public ICollection<AttemptModel> Attempts { get; set; } = new List<AttemptModel>();
+
+        // Method to count the number of quiz attempts with a score for a specific course
+        public int GetQuizAttemptsCount(int courseId)
+        {
+            return Attempts
+                .Where(a => a.Quiz.CourseId == courseId && a.Score.HasValue)
+                .Count();
+        }
     }
 }

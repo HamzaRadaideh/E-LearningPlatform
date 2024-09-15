@@ -8,16 +8,26 @@ namespace DinarkTaskOne.Services
     {
         public async Task<bool> EnrollStudentAsync(int studentId, int courseId)
         {
+            // Check if the course exists and is not full
+            var course = await context.Courses.Include(c => c.Enrollments).FirstOrDefaultAsync(c => c.CourseId == courseId);
+            if (course == null || course.Enrollments.Count >= course.MaxCapacity)
+            {
+                return false; // Course doesn't exist or is full
+            }
+
             // Check if the student is already enrolled
             if (await IsStudentEnrolledAsync(studentId, courseId))
             {
                 return false; // Student is already enrolled
             }
 
+            // Create a new enrollment and set the appropriate fields
             var enrollment = new EnrollModel
             {
                 StudentId = studentId,
-                CourseId = courseId
+                CourseId = courseId,
+                EnrolledAt = DateTime.UtcNow, // Set the current timestamp
+                Status = "Active" // Set the default status as Active
             };
 
             context.Enrollments.Add(enrollment);

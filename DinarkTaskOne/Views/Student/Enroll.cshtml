@@ -1,8 +1,4 @@
-﻿@{
-    ViewBag.Title = "Enroll in Course";
-}
-
-<div class="container mt-5">
+﻿<div class="container mt-5">
     <div class="card shadow-sm border-0">
         <div class="card-header bg-primary text-white">
             <h3 class="mb-0">Enroll in Course</h3>
@@ -10,22 +6,27 @@
         <div class="card-body">
             <form asp-action="EnrollPost" method="post">
                 <div class="mb-3">
-                    <label for="courseId" class="form-label">Course ID:</label>
-                    <input type="number" class="form-control" id="courseId" name="courseId" value="@ViewBag.CourseId" />
+                    <label for="courseId" class="form-label">Select Course:</label>
+                    <select class="form-control" id="courseId" name="courseId">
+                        @foreach (var course in ViewBag.Courses)
+                        {
+                            <option value="@course.CourseId">@course.Title - Instructor: @course.Instructor.FirstName @course.Instructor.LastName</option>
+                        }
+                    </select>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Enroll Now</button>
             </form>
             @if (ViewBag.Message != null)
             {
-                    <div class="alert alert-success mt-3" role="alert">
+                <div class="alert alert-success mt-3" role="alert">
                     @ViewBag.Message
-                    </div>
+                </div>
             }
             @if (!ViewData.ModelState.IsValid)
             {
-                    <div class="alert alert-danger mt-3" role="alert">
+                <div class="alert alert-danger mt-3" role="alert">
                     @Html.ValidationSummary(true)
-                    </div>
+                </div>
             }
         </div>
     </div>

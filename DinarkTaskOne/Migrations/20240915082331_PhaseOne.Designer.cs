@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DinarkTaskOne.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240908081840_PhaseTwoPointTwo")]
-    partial class PhaseTwoPointTwo
+    [Migration("20240915082331_PhaseOne")]
+    partial class PhaseOne
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,21 @@ namespace DinarkTaskOne.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("CourseModelMajorModel", b =>
+                {
+                    b.Property<int>("AllowedMajorsMajorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CoursesCourseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("AllowedMajorsMajorId", "CoursesCourseId");
+
+                    b.HasIndex("CoursesCourseId");
+
+                    b.ToTable("CourseMajors", (string)null);
+                });
 
             modelBuilder.Entity("DinarkTaskOne.Models.Authentication_Authorization.RolesModel", b =>
                 {
@@ -130,6 +145,84 @@ namespace DinarkTaskOne.Migrations
                     b.UseTphMappingStrategy();
                 });
 
+            modelBuilder.Entity("DinarkTaskOne.Models.Institution.DepartmentModel", b =>
+                {
+                    b.Property<int>("DepartmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DepartmentId"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("DepartmentId");
+
+                    b.ToTable("Departments");
+
+                    b.HasData(
+                        new
+                        {
+                            DepartmentId = 1,
+                            Name = "Computer Science"
+                        },
+                        new
+                        {
+                            DepartmentId = 2,
+                            Name = "Information Systems"
+                        },
+                        new
+                        {
+                            DepartmentId = 3,
+                            Name = "Cyber Security"
+                        });
+                });
+
+            modelBuilder.Entity("DinarkTaskOne.Models.Institution.MajorModel", b =>
+                {
+                    b.Property<int>("MajorId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MajorId"));
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("MajorId");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.ToTable("Majors");
+
+                    b.HasData(
+                        new
+                        {
+                            MajorId = 1,
+                            DepartmentId = 1,
+                            Name = "Computer Science"
+                        },
+                        new
+                        {
+                            MajorId = 2,
+                            DepartmentId = 2,
+                            Name = "Information Systems"
+                        },
+                        new
+                        {
+                            MajorId = 3,
+                            DepartmentId = 3,
+                            Name = "Cyber Security"
+                        });
+                });
+
             modelBuilder.Entity("DinarkTaskOne.Models.MakeQuiz.AnswerModel", b =>
                 {
                     b.Property<int>("AnswerId")
@@ -170,11 +263,17 @@ namespace DinarkTaskOne.Migrations
                     b.Property<bool>("Completed")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("QuizId")
                         .HasColumnType("int");
 
                     b.Property<int?>("Score")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("StudentId")
                         .HasColumnType("int");
@@ -256,6 +355,9 @@ namespace DinarkTaskOne.Migrations
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<TimeSpan>("Duration")
                         .HasColumnType("time");
 
@@ -289,6 +391,9 @@ namespace DinarkTaskOne.Migrations
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -308,17 +413,36 @@ namespace DinarkTaskOne.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CourseId"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("InstructorId")
                         .HasColumnType("int");
 
+                    b.Property<int>("MaxCapacity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("CourseId");
+
+                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("InstructorId");
 
@@ -335,6 +459,14 @@ namespace DinarkTaskOne.Migrations
 
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("EnrolledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("StudentId")
                         .HasColumnType("int");
@@ -358,6 +490,9 @@ namespace DinarkTaskOne.Migrations
 
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -390,6 +525,11 @@ namespace DinarkTaskOne.Migrations
                 {
                     b.HasBaseType("DinarkTaskOne.Models.Authentication_Authorization.UsersModel");
 
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("DepartmentId");
+
                     b.ToTable("Users");
 
                     b.HasDiscriminator().HasValue("Instructor");
@@ -399,9 +539,29 @@ namespace DinarkTaskOne.Migrations
                 {
                     b.HasBaseType("DinarkTaskOne.Models.Authentication_Authorization.UsersModel");
 
+                    b.Property<int>("MajorId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("MajorId");
+
                     b.ToTable("Users");
 
                     b.HasDiscriminator().HasValue("Student");
+                });
+
+            modelBuilder.Entity("CourseModelMajorModel", b =>
+                {
+                    b.HasOne("DinarkTaskOne.Models.Institution.MajorModel", null)
+                        .WithMany()
+                        .HasForeignKey("AllowedMajorsMajorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DinarkTaskOne.Models.ManageCourse.CourseModel", null)
+                        .WithMany()
+                        .HasForeignKey("CoursesCourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DinarkTaskOne.Models.Authentication_Authorization.UsersModel", b =>
@@ -413,6 +573,17 @@ namespace DinarkTaskOne.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("DinarkTaskOne.Models.Institution.MajorModel", b =>
+                {
+                    b.HasOne("DinarkTaskOne.Models.Institution.DepartmentModel", "Department")
+                        .WithMany("Majors")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("DinarkTaskOne.Models.MakeQuiz.AnswerModel", b =>
@@ -450,7 +621,7 @@ namespace DinarkTaskOne.Migrations
                     b.HasOne("DinarkTaskOne.Models.MakeQuiz.AttemptModel", "Attempt")
                         .WithMany("QuestionAnswers")
                         .HasForeignKey("AttemptId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DinarkTaskOne.Models.MakeQuiz.QuestionModel", "Question")
@@ -507,11 +678,19 @@ namespace DinarkTaskOne.Migrations
 
             modelBuilder.Entity("DinarkTaskOne.Models.ManageCourse.CourseModel", b =>
                 {
+                    b.HasOne("DinarkTaskOne.Models.Institution.DepartmentModel", "Department")
+                        .WithMany("Courses")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("DinarkTaskOne.Models.UserSpecficModels.InstructorModel", "Instructor")
                         .WithMany("Courses")
                         .HasForeignKey("InstructorId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Department");
 
                     b.Navigation("Instructor");
                 });
@@ -527,7 +706,7 @@ namespace DinarkTaskOne.Migrations
                     b.HasOne("DinarkTaskOne.Models.UserSpecficModels.StudentModel", "Student")
                         .WithMany("Enrollments")
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Course");
@@ -546,9 +725,45 @@ namespace DinarkTaskOne.Migrations
                     b.Navigation("Course");
                 });
 
+            modelBuilder.Entity("DinarkTaskOne.Models.UserSpecficModels.InstructorModel", b =>
+                {
+                    b.HasOne("DinarkTaskOne.Models.Institution.DepartmentModel", "Department")
+                        .WithMany("Instructors")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("DinarkTaskOne.Models.UserSpecficModels.StudentModel", b =>
+                {
+                    b.HasOne("DinarkTaskOne.Models.Institution.MajorModel", "Major")
+                        .WithMany("Students")
+                        .HasForeignKey("MajorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Major");
+                });
+
             modelBuilder.Entity("DinarkTaskOne.Models.Authentication_Authorization.RolesModel", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("DinarkTaskOne.Models.Institution.DepartmentModel", b =>
+                {
+                    b.Navigation("Courses");
+
+                    b.Navigation("Instructors");
+
+                    b.Navigation("Majors");
+                });
+
+            modelBuilder.Entity("DinarkTaskOne.Models.Institution.MajorModel", b =>
+                {
+                    b.Navigation("Students");
                 });
 
             modelBuilder.Entity("DinarkTaskOne.Models.MakeQuiz.AttemptModel", b =>

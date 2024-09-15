@@ -95,7 +95,6 @@ app.Use(async (context, next) =>
     await next();
 });
 
-
 // Define default route
 app.MapControllerRoute(
     name: "default",

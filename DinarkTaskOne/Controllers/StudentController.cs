@@ -236,9 +236,11 @@ namespace DinarkTaskOne.Controllers
 
         // Enroll in a course
         [HttpGet]
-        public IActionResult Enroll(int courseId)
+        public async Task<IActionResult> Enroll()
         {
-            ViewBag.CourseId = courseId;
+            ViewBag.Courses = await context.Courses
+                .Include(c => c.Instructor)
+                .ToListAsync(); // Get available courses
             return View();
         }
 
@@ -247,8 +249,8 @@ namespace DinarkTaskOne.Controllers
         {
             if (courseId <= 0)
             {
-                ModelState.AddModelError("", "Please enter a valid Course ID.");
-                ViewBag.CourseId = courseId;
+                ModelState.AddModelError("", "Please select a valid course.");
+                ViewBag.Courses = await context.Courses.Include(c => c.Instructor).ToListAsync();
                 return View("Enroll");
             }
 
@@ -260,7 +262,17 @@ namespace DinarkTaskOne.Controllers
             if (course == null)
             {
                 ModelState.AddModelError("", "The selected course does not exist.");
-                ViewBag.CourseId = courseId;
+                ViewBag.Courses = await context.Courses.Include(c => c.Instructor).ToListAsync();
+                return View("Enroll");
+            }
+
+            // Log for debugging
+            Console.WriteLine($"Course enrollments: {course.Enrollments.Count}, Max capacity: {course.MaxCapacity}");
+
+            if (course.Enrollments.Count >= course.MaxCapacity)
+            {
+                ModelState.AddModelError("", "This course has reached its maximum capacity.");
+                ViewBag.Courses = await context.Courses.Include(c => c.Instructor).ToListAsync();
                 return View("Enroll");
             }
 
@@ -268,12 +280,13 @@ namespace DinarkTaskOne.Controllers
             if (int.TryParse(userIdClaim, out int studentId) && await enrollmentService.IsStudentEnrolledAsync(studentId, courseId))
             {
                 ModelState.AddModelError("", "You are already enrolled in this course.");
-                ViewBag.CourseId = courseId;
+                ViewBag.Courses = await context.Courses.Include(c => c.Instructor).ToListAsync();
                 return View("Enroll");
             }
 
             return View("EnrollPost", course);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> ConfirmEnrollment(int courseId)
@@ -302,7 +315,7 @@ namespace DinarkTaskOne.Controllers
                 return Unauthorized();
             }
 
-            // Fetch the enrolled course and related data (materials, announcements, and quizzes)
+            // Fetch the course along with its materials, announcements, and quizzes
             var course = await context.Courses
                 .Include(c => c.Materials)
                 .Include(c => c.Announcements)
@@ -315,28 +328,35 @@ namespace DinarkTaskOne.Controllers
                 return NotFound("Course not found.");
             }
 
-            // Calculate the total quiz score for the student in this course
-            var combinedQuizScore = await context.Attempts
-                .Where(a => a.Quiz.CourseId == courseId && a.StudentId == studentId && a.Score.HasValue)
-                .SumAsync(a => a.Score.Value);
+            // Get the list of completed quizzes and corresponding attempts
+            var completedAttempts = await context.Attempts
+                .Where(a => a.Quiz.CourseId == courseId && a.StudentId == studentId && a.Completed)
+                .ToListAsync();
 
-            // Calculate the maximum possible score for quizzes in this course
-            var totalMaxScore = course.Quizzes
-                .Sum(q => q.Questions.Sum(qn => qn.Marks));
+            var completedQuizzes = completedAttempts.Select(a => a.QuizId).ToList();
+            var completedAttemptsDict = completedAttempts.ToDictionary(a => a.QuizId, a => a.AttemptId);
+
+            // Calculate the total quiz score for the student
+
+
+
+            var combinedQuizScore = completedAttempts.Sum(a => a.Score.Value);
+            int totalMaxScore = course.Quizzes.Sum(q => q.Questions.Sum(qn =>
+            {
+                return qn is null ? throw new ArgumentNullException(nameof(qn)) : qn.Marks;
+            }));
 
             // Calculate the student's percentage score
             var percentageScore = totalMaxScore > 0
                 ? (combinedQuizScore / (double)totalMaxScore) * 100
                 : 0;
 
-            // Combine and order the content (materials, announcements, and quizzes) by CreatedAt
+            // Combine and order the content (materials, announcements, and quizzes)
             var allContent = new List<dynamic>();
+            allContent.AddRange(course.Materials.Select(m => new { Type = "Material", m.CreatedAt, Content = m }));
+            allContent.AddRange(course.Announcements.Select(a => new { Type = "Announcement", a.CreatedAt, Content = a }));
+            allContent.AddRange(course.Quizzes.Select(q => new { Type = "Quiz", q.CreatedAt, Content = q }));
 
-            allContent.AddRange(course.Materials.Select(m => new { Type = "Material", CreatedAt = m.CreatedAt, Content = m }));
-            allContent.AddRange(course.Announcements.Select(a => new { Type = "Announcement", CreatedAt = a.CreatedAt, Content = a }));
-            allContent.AddRange(course.Quizzes.Select(q => new { Type = "Quiz", CreatedAt = q.CreatedAt, Content = q }));
-
-            // Sort the content by CreatedAt in descending order
             var sortedContent = allContent.OrderByDescending(c => c.CreatedAt).ToList();
 
             // Build the view model to pass to the view
@@ -348,10 +368,14 @@ namespace DinarkTaskOne.Controllers
                 SortedContent = sortedContent,
                 CombinedQuizScore = combinedQuizScore,
                 MaxPossibleScore = totalMaxScore,
-                PercentageScore = percentageScore // Add percentage score to the view model
+                PercentageScore = percentageScore,
+                CompletedQuizzes = completedQuizzes, 
+                CompletedAttempts = completedAttemptsDict
             };
 
             return View(viewModel);
         }
+
     }
+
 }
