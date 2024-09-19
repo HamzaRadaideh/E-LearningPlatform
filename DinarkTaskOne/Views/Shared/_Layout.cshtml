@@ -46,49 +46,49 @@
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-person-circle"></i> @User.Identity.Name
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-white" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-person-circle"></i> @User.Identity.Name
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
                                     @if (User.IsInRole("Admin"))
                                     {
-                                        <li class="dropdown-role-title admin-icon">
-                                            Admin
-                                        </li>
-                                        <li><a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="Dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                                                <li class="dropdown-role-title admin-icon">
+                                                    Admin
+                                                </li>
+                                                <li><a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="Dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
                                     }
                                     @if (User.IsInRole("Instructor"))
                                     {
-                                        <li class="dropdown-role-title instructor-icon">
-                                            Instructor
-                                        </li>
-                                        <li><a class="dropdown-item" asp-area="" asp-controller="Course" asp-action="CoursesDashboard"><i class="bi bi-journal"></i> Manage Courses</a></li>
+                                                <li class="dropdown-role-title instructor-icon">
+                                                    Instructor
+                                                </li>
+                                                <li><a class="dropdown-item" asp-area="" asp-controller="Course" asp-action="CoursesDashboard"><i class="bi bi-journal"></i> Manage Courses</a></li>
                                     }
                                     @if (User.IsInRole("Student"))
                                     {
-                                        <li class="dropdown-role-title student-icon">
-                                            Student
-                                        </li>
-                                        <li><a class="dropdown-item" asp-area="" asp-controller="Student" asp-action="MyCourses"><i class="bi bi-book"></i> My Courses</a></li>
+                                                <li class="dropdown-role-title student-icon">
+                                                    Student
+                                                </li>
+                                                <li><a class="dropdown-item" asp-area="" asp-controller="Student" asp-action="MyCourses"><i class="bi bi-book"></i> My Courses</a></li>
                                     }
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Settings"><i class="bi bi-gear"></i> Settings</a></li>
-                                    <li>
-                                        <form asp-area="" asp-controller="Sign" asp-action="Logout" method="post">
-                                            <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Logout</button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Settings"><i class="bi bi-gear"></i> Settings</a></li>
+                                        <li>
+                                            <form asp-area="" asp-controller="Sign" asp-action="Logout" method="post">
+                                                <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </li>
                         }
                         else
                         {
-                            <li class="nav-item">
-                                <a class="btn btn-outline-light me-2" asp-area="" asp-controller="Sign" asp-action="Login"><i class="bi bi-box-arrow-in-right"></i> Login</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="btn btn-warning" asp-area="" asp-controller="Sign" asp-action="Register"><i class="bi bi-person-plus-fill"></i> Register</a>
-                            </li>
+                                <li class="nav-item">
+                                    <a class="btn btn-outline-light me-2" asp-area="" asp-controller="Sign" asp-action="Login"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="btn btn-warning" asp-area="" asp-controller="Sign" asp-action="Register"><i class="bi bi-person-plus-fill"></i> Register</a>
+                                </li>
                         }
                     </ul>
                 </div>
@@ -111,11 +111,10 @@
                 <div class="col-md-6 row">
                     <h6 class="text-warning fw-bold">About us</h6>
                     <div class="col-md-6 ">
-                        <img src="~/images/elearning-hero.png" alt="E-Learning Platform" class="img-fluid" style="max-height: 200px; object-fit: cover;" />
+                        <img src="~/images/elearning-hero.png" alt="E-Learning Platform" class="img-fluid" loading="lazy" style="max-height: 200px; object-fit: cover;" />
                     </div>
                     <div class="col-md-5 ">
-                        <p class="small">@* Empowering learners with high-quality content and engaging online courses. *@
-                            Our platform brings education to your fingertips, anytime, anywhere.</p>
+                        <p class="small">Our platform brings education to your fingertips, anytime, anywhere.</p>
                     </div>
                 </div>                
 

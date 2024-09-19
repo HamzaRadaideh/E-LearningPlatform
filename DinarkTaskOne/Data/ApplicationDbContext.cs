@@ -67,79 +67,60 @@ namespace DinarkTaskOne.Data
                 .HasOne(c => c.Instructor)
                 .WithMany(i => i.Courses)
                 .HasForeignKey(c => c.InstructorId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict); // Avoid cascade path cycle
 
             modelBuilder.Entity<CourseModel>()
                 .HasOne(c => c.Department)
                 .WithMany(d => d.Courses)
                 .HasForeignKey(c => c.DepartmentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict); // Avoid cascade path cycle
 
-            modelBuilder.Entity<CourseModel>()
-                .HasMany(c => c.AllowedMajors)
-                .WithMany(m => m.Courses)
-                .UsingEntity(j => j.ToTable("CourseMajors"));
-
-            // Major and Department relationships
-            modelBuilder.Entity<MajorModel>()
-                .HasOne(m => m.Department)
-                .WithMany(d => d.Majors)
-                .HasForeignKey(m => m.DepartmentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Instructor and Department relationship
-            modelBuilder.Entity<InstructorModel>()
-                .HasOne(i => i.Department)
-                .WithMany(d => d.Instructors)
-                .HasForeignKey(i => i.DepartmentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+            // Removed CourseMajor configuration
             // Student and Major relationship
             modelBuilder.Entity<StudentModel>()
                 .HasOne(s => s.Major)
                 .WithMany(m => m.Students)
                 .HasForeignKey(s => s.MajorId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict); // Avoid cascade path cycle
 
             // Attempt relationships
             modelBuilder.Entity<AttemptModel>()
                 .HasOne(a => a.Student)
                 .WithMany(s => s.Attempts)
                 .HasForeignKey(a => a.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // QuestionAnswer relationships
-            modelBuilder.Entity<QuestionAnswerModel>()
-                .HasOne(qa => qa.Attempt)
-                .WithMany(a => a.QuestionAnswers)
-                .HasForeignKey(qa => qa.AttemptId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             modelBuilder.Entity<QuestionAnswerModel>()
                 .HasOne(qa => qa.Question)
                 .WithMany(q => q.QuestionAnswers)
                 .HasForeignKey(qa => qa.QuestionId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict);  // Change to Restrict
+
+            modelBuilder.Entity<QuestionAnswerModel>()
+                .HasOne(qa => qa.Attempt)
+                .WithMany(a => a.QuestionAnswers)
+                .HasForeignKey(qa => qa.AttemptId)
+                .OnDelete(DeleteBehavior.Cascade);  // Cascade is fine here
 
             modelBuilder.Entity<QuestionAnswerModel>()
                 .HasOne(qa => qa.SelectedOption)
                 .WithMany()
                 .HasForeignKey(qa => qa.SelectedOptionId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+                .OnDelete(DeleteBehavior.Restrict);  // Change to Restrict
 
             // EnrollModel relationships
             modelBuilder.Entity<EnrollModel>()
                 .HasOne(e => e.Course)
                 .WithMany(c => c.Enrollments)
                 .HasForeignKey(e => e.CourseId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<EnrollModel>()
                 .HasOne(e => e.Student)
                 .WithMany(s => s.Enrollments)
                 .HasForeignKey(e => e.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Seed default departments and majors
             modelBuilder.Entity<DepartmentModel>().HasData(

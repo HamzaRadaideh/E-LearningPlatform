@@ -1,39 +1,58 @@
-﻿@model DinarkTaskOne.Models.ManageCourse.CourseModel
+﻿@model DinarkTaskOne.Models.ViewModels.CourseViewModel
 
 <div class="container mt-5">
     <h2 class="text-primary mb-4">Create Course</h2>
 
     <!-- Form begins -->
     <form asp-action="CreateCourse" method="post" class="shadow-sm p-4 bg-white rounded">
-        <!-- Anti-forgery token -->
         @Html.AntiForgeryToken()
 
-        <!-- Validation Summary -->
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-        <!-- Course Title -->
         <div class="mb-3">
             <label for="Title" class="form-label fw-bold">Course Title</label>
-            <input type="text" class="form-control border-secondary" id="Title" asp-for="Title" placeholder="Enter course title" aria-label="Course Title" required>
+            <input type="text" class="form-control border-secondary" id="Title" asp-for="Title" placeholder="Enter course title" required>
             <span asp-validation-for="Title" class="text-danger"></span>
         </div>
 
-        <!-- Description -->
         <div class="mb-3">
             <label for="Description" class="form-label fw-bold">Description</label>
-            <textarea class="form-control border-secondary" id="Description" asp-for="Description" placeholder="Enter course description" rows="3" aria-label="Course Description"></textarea>
+            <textarea class="form-control border-secondary" id="Description" asp-for="Description" placeholder="Enter course description" rows="3" required></textarea>
             <span asp-validation-for="Description" class="text-danger"></span>
         </div>
 
-        <!-- Max Capacity -->
         <div class="mb-3">
             <label for="MaxCapacity" class="form-label fw-bold">Max Capacity</label>
-            <input type="number" class="form-control border-secondary" id="MaxCapacity" asp-for="MaxCapacity" placeholder="Enter max number of students" min="1" aria-label="Max Capacity" required>
+            <input type="number" class="form-control border-secondary" id="MaxCapacity" asp-for="MaxCapacity" min="1" required>
             <span asp-validation-for="MaxCapacity" class="text-danger"></span>
         </div>
 
-        <!-- Submit Button -->
+        <div class="mb-3">
+            <label for="CourseEndTime" class="form-label fw-bold">Course End Time</label>
+            <input type="datetime-local" class="form-control border-secondary" id="CourseEndTime" asp-for="CourseEndTime" required>
+            <span asp-validation-for="CourseEndTime" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label for="SelectedMajors" class="form-label fw-bold">Allowed Majors</label>
+            <div class="form-check">
+                @if (Model.AvailableMajors != null)
+                {
+                    @foreach (var major in Model.AvailableMajors)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="SelectedMajors" value="@major.Value" id="major-@major.Value"
+                            @(Model.SelectedMajors.Contains(int.Parse(major.Value)) ? "checked" : "")>
+                            <label class="form-check-label" for="major-@major.Value">
+                                @major.Text
+                            </label>
+                        </div>
+                    }
+                }
+            </div>
+            <span asp-validation-for="SelectedMajors" class="text-danger"></span>
+        </div>
+
         <button type="submit" class="btn btn-primary w-100 py-2">Create Course</button>
     </form>
-    <!-- Form ends -->
 </div>

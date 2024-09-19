@@ -1,23 +1,27 @@
+using DinarkTaskOne.Data;
 using DinarkTaskOne.Services;
 using DinarkTaskOne.Attributes;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.SqlServer;
-using DinarkTaskOne.Data;
-
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddMvcOptions(options => options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute())) // Auto CSRF validation
+    .AddRazorRuntimeCompilation(); // Enable Razor runtime compilation for views
 
+// Add distributed memory cache and session
 builder.Services.AddDistributedMemoryCache();
-
 builder.Services.AddDistributedSqlServerCache(options =>
 {
     options.ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.SchemaName = "dbo";
     options.TableName = "SessionCache";
+    options.DefaultSlidingExpiration = TimeSpan.FromMinutes(30); // Set sliding expiration for cached items
 });
 
 // Configure session management
@@ -34,10 +38,13 @@ builder.Services.AddSession(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Register the SignService as a scoped dependency
+// Add health checks for database and distributed cache
+builder.Services.AddHealthChecks()
+    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+
+// Register the SignService and EnrollmentService as scoped dependencies
 builder.Services.AddScoped<ISignService, SignService>();
 builder.Services.AddScoped<IEnrollmentService, EnrollmentService>();
-
 
 // Configure custom authentication scheme using cookies
 builder.Services.AddAuthentication(options =>
@@ -53,10 +60,14 @@ builder.Services.AddAuthentication(options =>
     options.AccessDeniedPath = "/Sign/AccessDenied";
 });
 
-
-
-// Add authorization services
-builder.Services.AddAuthorization();
+// Add authorization policies for Admin and Instructor
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("Admin"));
+    options.AddPolicy("InstructorOnly", policy =>
+        policy.RequireRole("Instructor"));
+});
 
 // Add Razor Pages support
 builder.Services.AddRazorPages();
@@ -74,26 +85,24 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
-app.UseAuthentication();
-app.UseAuthorization();
 
+// Middleware to check session and authentication consistency
 app.Use(async (context, next) =>
 {
-    // Ensure context.Session and context.User are not null
-    if (context.Session != null)
-    {
-        var userIdString = context.Session.GetString("UserId");
+    var userIdString = context.Session.GetString("UserId");
 
-        if (string.IsNullOrEmpty(userIdString) && context.User != null && context.User.Identity?.IsAuthenticated == true)
-        {
-            await context.SignOutAsync("CustomScheme");
-            context.Response.Redirect("/Sign/Login");
-            return;
-        }
+    if (context.User.Identity?.IsAuthenticated == true && string.IsNullOrEmpty(userIdString))
+    {
+        await context.SignOutAsync("CustomScheme");
+        context.Response.Redirect("/Sign/Login");
+        return;
     }
 
     await next();
 });
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Define default route
 app.MapControllerRoute(

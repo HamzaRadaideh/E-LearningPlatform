@@ -1,4 +1,5 @@
-﻿@model DinarkTaskOne.Models.Authentication_Authorization.UsersModel
+﻿@model DinarkTaskOne.Models.ViewModels.RegisterViewModel
+
 @{
     ViewData["Title"] = "Register";
 }
@@ -9,7 +10,7 @@
         <div class="col-md-8">
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
-                    <form asp-action="Register" method="post">
+                    <form asp-action="Register" method="post" id="registerForm">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label asp-for="FirstName" class="form-label fw-bold">First Name</label>
@@ -42,22 +43,160 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="Password" class="form-label fw-bold">Password</label>
-                            <input type="password" id="Password" name="Password" class="form-control border-secondary" placeholder="Enter a password" required />
+                            <label for="Role" class="form-label fw-bold">Role</label>
+                            <select asp-for="Role" class="form-control border-secondary" required>
+                                <option value="Student">Student</option>
+                                <option value="Instructor">Instructor</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="departmentField">
+                            <label asp-for="DepartmentId" class="form-label fw-bold">Department</label>
+                            <select asp-for="DepartmentId" class="form-control border-secondary">
+                                <option value="">Select Department</option>
+                                @foreach (var department in ViewBag.Departments)
+                                {
+                                    <option value="@department.DepartmentId">@department.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3" id="majorField">
+                            <label asp-for="MajorId" class="form-label fw-bold">Major</label>
+                            <select asp-for="MajorId" class="form-control border-secondary">
+                                <option value="">Select Major</option>
+                                @foreach (var major in ViewBag.Majors)
+                                {
+                                    <option value="@major.MajorId">@major.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="MajorId" class="text-danger"></span>
+                        </div>
+
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label fw-bold">Password</label>
+                            <input asp-for="Password" type="password" class="form-control border-secondary" placeholder="Enter a password" required />
+                            <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label for="ConfirmPassword" class="form-label fw-bold">Confirm Password</label>
-                            <input type="password" id="ConfirmPassword" name="ConfirmPassword" class="form-control border-secondary" placeholder="Confirm your password" required />
+                            <label asp-for="ConfirmPassword" class="form-label fw-bold">Confirm Password</label>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control border-secondary" placeholder="Confirm your password" required />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 py-2">Register</button>
                     </form>
                     <div class="text-center mt-3">
-                        <p class="small">Already have an account? <a href="#" class="text-primary">Login here</a></p>
+                        <p class="small">Already have an account? <a asp-controller="Sign" asp-action="Login" class="text-primary">Login here</a></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // Initially hide or show fields based on role
+            toggleFields();
+
+            // On role change, toggle the visibility of department and major fields
+            $('#Role').change(function () {
+                toggleFields();
+            });
+
+            function toggleFields() {
+                var selectedRole = $('#Role').val();
+                if (selectedRole === 'Instructor') {
+                    $('#departmentField').show();
+                    $('#majorField').hide();
+                    $('#Major').val(''); // Clear major selection
+                } else if (selectedRole === 'Student') {
+                    $('#departmentField').hide();
+                    $('#majorField').show();
+                    $('#Department').val(''); // Clear department selection
+                }
+            }
+
+            // jQuery Validation
+            $("#registerForm").validate({
+                rules: {
+                    FirstName: {
+                        required: true,
+                        minlength: 2
+                    },
+                    LastName: {
+                        required: true,
+                        minlength: 2
+                    },
+                    UserName: {
+                        required: true,
+                        minlength: 3
+                    },
+                    Email: {
+                        required: true,
+                        email: true
+                    },
+                    PhoneNumber: {
+                        required: true,
+                        digits: true,
+                        minlength: 10,
+                        maxlength: 15
+                    },
+                    Password: {
+                        required: true,
+                        minlength: 6
+                    },
+                    ConfirmPassword: {
+                        required: true,
+                        minlength: 6,
+                        equalTo: "#Password"
+                    },
+                    DepartmentId: {
+                        required: function () {
+                            return $('#Role').val() === 'Instructor';
+                        }
+                    },
+                    MajorId: {
+                        required: function () {
+                            return $('#Role').val() === 'Student';
+                        }
+                    }
+                },
+                messages: {
+                    FirstName: "Please enter a valid first name",
+                    LastName: "Please enter a valid last name",
+                    UserName: "Please enter a valid username",
+                    Email: "Please enter a valid email",
+                    PhoneNumber: "Please enter a valid phone number",
+                    Password: {
+                        required: "Please provide a password",
+                        minlength: "Your password must be at least 6 characters long"
+                    },
+                    ConfirmPassword: {
+                        required: "Please confirm your password",
+                        equalTo: "Password and Confirm Password must match"
+                    },
+                    DepartmentId: "Please select a department",
+                    MajorId: "Please select a major"
+                },
+                errorElement: 'div',
+                errorPlacement: function (error, element) {
+                    error.addClass('text-danger');
+                    element.closest('div').append(error);
+                },
+                highlight: function (element) {
+                    $(element).addClass('is-invalid');
+                },
+                unhighlight: function (element) {
+                    $(element).removeClass('is-invalid');
+                }
+            });
+
+        });
+    </script>
+}

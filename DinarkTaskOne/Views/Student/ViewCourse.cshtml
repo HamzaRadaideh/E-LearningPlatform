@@ -30,36 +30,33 @@
                             <ul class="list-group">
                                 @foreach (var item in Model.SortedContent)
                                 {
-                                    if (item.Type == "Material")
+                                    if (item.Type == "Material" && item.Material != null)
                                     {
-                                        var material = (DinarkTaskOne.Models.ManageCourse.MaterialsModel)item.Content;
                                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-file-earmark-text"></i> @material.Description</span>
-                                            <a href="~/Uploads/@material.FilePath" class="badge bg-primary">@material.FileType</a>
+                                            <span><i class="bi bi-file-earmark-text"></i> @item.Material.Description</span>
+                                            <a href="~/Uploads/@item.Material.FilePath" class="badge bg-primary">@item.Material.FileType</a>
                                         </li>
                                     }
-                                    else if (item.Type == "Announcement")
+                                    else if (item.Type == "Announcement" && item.Announcement != null)
                                     {
-                                        var announcement = (DinarkTaskOne.Models.ManageCourse.AnnouncementModel)item.Content;
-                                        <li class="list-group-item list-group-item-@announcement.Type.ToLower()">
-                                            <i class="bi bi-megaphone-fill"></i> @announcement.Content
+                                        <li class="list-group-item list-group-item-@item.Announcement.Type.ToLower()">
+                                            <i class="bi bi-megaphone-fill"></i> @item.Announcement.Content
                                         </li>
                                     }
-                                    else @if (item.Type == "Quiz")
+                                    else if (item.Type == "Quiz" && item.Quiz != null)
                                     {
-                                        var quiz = (DinarkTaskOne.Models.MakeQuiz.QuizModel)item.Content;
-                                        bool isCompleted = Model.CompletedQuizzes.Contains(quiz.QuizId); // Check if the quiz is completed
+                                        bool isCompleted = Model.CompletedQuizzes.Contains(item.Quiz.QuizId); // Check if the quiz is completed
 
                                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-question-circle"></i> @quiz.Title</span>
+                                            <span><i class="bi bi-question-circle"></i> @item.Quiz.Title</span>
 
                                             @if (isCompleted)
                                             {
-                                                <a asp-action="QuizResult" asp-controller="Student" asp-route-attemptId="@Model.CompletedAttempts[quiz.QuizId]" class="btn btn-info">View Results</a>
+                                                <a asp-action="QuizResult" asp-controller="Student" asp-route-attemptId="@Model.CompletedAttempts[item.Quiz.QuizId]" class="btn btn-info">View Results</a>
                                             }
                                             else
                                             {
-                                                <a asp-action="TakeQuiz" asp-controller="Student" asp-route-quizId="@quiz.QuizId" class="btn btn-primary">Take Quiz</a>
+                                                <a asp-action="TakeQuiz" asp-controller="Student" asp-route-quizId="@item.Quiz.QuizId" class="btn btn-primary">Take Quiz</a>
                                             }
                                         </li>
                                     }

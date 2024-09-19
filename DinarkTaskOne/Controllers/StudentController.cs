@@ -10,60 +10,64 @@ using System.Threading.Tasks;
 
 namespace DinarkTaskOne.Controllers
 {
-    public class StudentController(IEnrollmentService enrollmentService, ApplicationDbContext context) : Controller
+    public class StudentController : Controller
     {
-        // Action to display available quizzes for a course
+        private readonly IEnrollmentService _enrollmentService;
+        private readonly ApplicationDbContext _context;
+
+        public StudentController(IEnrollmentService enrollmentService, ApplicationDbContext context)
+        {
+            _enrollmentService = enrollmentService;
+            _context = context;
+        }
+
+        private int GetCurrentUserId()
+        {
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? throw new InvalidOperationException("User ID claim is missing.");
+            return int.Parse(userIdValue);
+        }
+
+        // Display available quizzes for a course
         [HttpGet]
         public async Task<IActionResult> AvailableQuizzes(int courseId)
         {
-            var quizzes = await context.Quizzes
+            var quizzes = await _context.Quizzes
                 .Where(q => q.CourseId == courseId)
                 .ToListAsync();
 
             return View(quizzes);
         }
 
-        // Action to start a quiz
+        // Start a quiz
         [HttpGet]
         public async Task<IActionResult> TakeQuiz(int quizId)
         {
-            // Retrieve the user's ID from the claims
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int studentId = GetCurrentUserId();
 
-            // If the userId is not valid, return Unauthorized
-            if (!int.TryParse(userIdClaim, out int studentId))
-            {
-                return Unauthorized();
-            }
-
-            // Check if the student has already attempted and completed the quiz
-            var existingAttempt = await context.Attempts
+            var existingAttempt = await _context.Attempts
                 .FirstOrDefaultAsync(a => a.QuizId == quizId && a.StudentId == studentId && a.Completed);
 
             if (existingAttempt != null)
             {
-                // Redirect to the result if the quiz was already completed
                 return RedirectToAction("QuizResult", new { attemptId = existingAttempt.AttemptId });
             }
 
-            // Retrieve the quiz along with its questions and answers
-            var quiz = await context.Quizzes
+            var quiz = await _context.Quizzes
                 .Include(q => q.Questions)
                 .ThenInclude(q => q.Answers)
                 .FirstOrDefaultAsync(q => q.QuizId == quizId);
 
-            // If the quiz is not found, return a 404 error
             if (quiz == null)
             {
                 return NotFound("Quiz not found.");
             }
 
-            // Map the quiz data to the TakeQuizViewModel
             var takeQuizViewModel = new TakeQuizViewModel
             {
                 QuizId = quiz.QuizId,
                 QuizTitle = quiz.Title,
-                Duration = quiz.Duration, // <-- Duration is passed to the view
+                Duration = quiz.Duration,
                 Questions = quiz.Questions.Select(q => new QuestionViewModel
                 {
                     QuestionId = q.QuestionId,
@@ -77,59 +81,54 @@ namespace DinarkTaskOne.Controllers
                 }).ToList()
             };
 
-            // Start a new quiz attempt for the student
             var attempt = new AttemptModel
             {
                 QuizId = quiz.QuizId,
                 StudentId = studentId,
                 AttemptDate = DateTime.UtcNow,
                 StartTime = DateTime.UtcNow,
-                EndTime = DateTime.UtcNow.Add(quiz.Duration), // <-- Timer is based on the quiz duration
+                EndTime = DateTime.UtcNow.Add(quiz.Duration),
                 Completed = false
             };
 
-            // Save the attempt to the database
-            context.Attempts.Add(attempt);
-            await context.SaveChangesAsync();
+            _context.Attempts.Add(attempt);
+            await _context.SaveChangesAsync();
 
-            // Pass the attempt ID to the view via ViewBag
             ViewBag.AttemptId = attempt.AttemptId;
 
-            // Return the TakeQuiz view with the view model
             return View(takeQuizViewModel);
         }
 
-        // Action to submit the quiz
+        // Submit the quiz
         [HttpPost]
         public async Task<IActionResult> SubmitQuiz(int AttemptId, IFormCollection form)
         {
-            var attempt = await context.Attempts
+            var attempt = await _context.Attempts
                 .Include(a => a.Quiz)
-                    .ThenInclude(q => q.Questions)
-                        .ThenInclude(q => q.Answers)
+                .ThenInclude(q => q.Questions)
+                .ThenInclude(q => q.Answers)
                 .FirstOrDefaultAsync(a => a.AttemptId == AttemptId);
 
             if (attempt == null)
                 return NotFound("Attempt not found.");
 
-            // Check if the time limit has been exceeded
             if (DateTime.UtcNow > attempt.EndTime)
             {
                 attempt.Score = 0;
                 attempt.Completed = true;
-                await context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
                 ModelState.AddModelError("", "Time limit exceeded.");
                 return RedirectToAction("QuizResult", new { attemptId = AttemptId });
             }
 
-            // Check if the attempt is already completed
             if (attempt.Completed)
             {
                 return BadRequest("This quiz has already been submitted.");
             }
 
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdClaim, out int studentId) || studentId != attempt.StudentId)
+            int studentId = GetCurrentUserId();
+
+            if (studentId != attempt.StudentId)
             {
                 return Unauthorized();
             }
@@ -137,7 +136,6 @@ namespace DinarkTaskOne.Controllers
             int totalScore = 0;
             int maxScore = attempt.Quiz.Questions.Sum(q => q.Marks);
 
-            // Process each question
             foreach (var question in attempt.Quiz.Questions)
             {
                 var formKey = $"SelectedAnswers[{question.QuestionId}]";
@@ -148,7 +146,6 @@ namespace DinarkTaskOne.Controllers
                     if (question.Type == QuestionType.MultipleChoice || question.Type == QuestionType.TrueFalse)
                     {
                         int selectedAnswerId = int.Parse(selectedValues[0]);
-
                         var selectedAnswer = question.Answers.FirstOrDefault(a => a.AnswerId == selectedAnswerId);
 
                         if (selectedAnswer != null && selectedAnswer.IsCorrect)
@@ -156,18 +153,16 @@ namespace DinarkTaskOne.Controllers
                             totalScore += question.Marks;
                         }
 
-                        var questionAnswer = new QuestionAnswerModel
+                        _context.QuestionAnswers.Add(new QuestionAnswerModel
                         {
                             AttemptId = AttemptId,
                             QuestionId = question.QuestionId,
-                            SelectedOptionId = selectedAnswerId // Ensure this is the selected option
-                        };
-                        context.QuestionAnswers.Add(questionAnswer);
+                            SelectedOptionId = selectedAnswerId
+                        });
                     }
                     else if (question.Type == QuestionType.MultipleAnswers)
                     {
                         var selectedAnswerIds = selectedValues.Select(int.Parse).ToList();
-
                         var correctAnswerIds = question.Answers
                             .Where(a => a.IsCorrect)
                             .Select(a => a.AnswerId)
@@ -180,13 +175,12 @@ namespace DinarkTaskOne.Controllers
 
                         foreach (var selectedAnswerId in selectedAnswerIds)
                         {
-                            var questionAnswer = new QuestionAnswerModel
+                            _context.QuestionAnswers.Add(new QuestionAnswerModel
                             {
                                 AttemptId = AttemptId,
                                 QuestionId = question.QuestionId,
                                 SelectedOptionId = selectedAnswerId
-                            };
-                            context.QuestionAnswers.Add(questionAnswer);
+                            });
                         }
                     }
                 }
@@ -194,21 +188,20 @@ namespace DinarkTaskOne.Controllers
 
             attempt.Score = totalScore;
             attempt.Completed = true;
-
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("QuizResult", new { attemptId = AttemptId });
         }
 
-        // Action to view quiz result
+        // View quiz result
         [HttpGet]
         public async Task<IActionResult> QuizResult(int attemptId)
         {
-            var attempt = await context.Attempts
+            var attempt = await _context.Attempts
                 .Include(a => a.Quiz)
-                .Include(a => a.QuestionAnswers) // Ensure QuestionAnswers is loaded
-                    .ThenInclude(qa => qa.Question) // Load the related questions
-                        .ThenInclude(q => q.Answers) // Load the related answers
+                .Include(a => a.QuestionAnswers)
+                    .ThenInclude(qa => qa.Question)
+                        .ThenInclude(q => q.Answers)
                 .FirstOrDefaultAsync(a => a.AttemptId == attemptId);
 
             if (attempt == null)
@@ -219,28 +212,24 @@ namespace DinarkTaskOne.Controllers
             ViewBag.Score = attempt.Score;
             ViewBag.MaxScore = attempt.Quiz.Questions.Sum(q => q.Marks);
 
-            return View(attempt); // Make sure you're passing the populated model to the view
+            return View(attempt);
         }
 
-        // Action to list courses and enrollments
+        // List courses and enrollments
         public async Task<IActionResult> MyCourses()
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdClaim, out int studentId))
-            {
-                var enrollments = await enrollmentService.GetEnrollmentsByStudentIdAsync(studentId);
-                return View(enrollments);
-            }
-            return Unauthorized();
+            int studentId = GetCurrentUserId();
+            var enrollments = await _enrollmentService.GetEnrollmentsByStudentIdAsync(studentId);
+            return View(enrollments);
         }
 
         // Enroll in a course
         [HttpGet]
         public async Task<IActionResult> Enroll()
         {
-            ViewBag.Courses = await context.Courses
+            ViewBag.Courses = await _context.Courses
                 .Include(c => c.Instructor)
-                .ToListAsync(); // Get available courses
+                .ToListAsync();
             return View();
         }
 
@@ -250,11 +239,11 @@ namespace DinarkTaskOne.Controllers
             if (courseId <= 0)
             {
                 ModelState.AddModelError("", "Please select a valid course.");
-                ViewBag.Courses = await context.Courses.Include(c => c.Instructor).ToListAsync();
+                ViewBag.Courses = await _context.Courses.Include(c => c.Instructor).ToListAsync();
                 return View("Enroll");
             }
 
-            var course = await context.Courses
+            var course = await _context.Courses
                 .Include(c => c.Instructor)
                 .Include(c => c.Enrollments)
                 .FirstOrDefaultAsync(c => c.CourseId == courseId);
@@ -262,44 +251,37 @@ namespace DinarkTaskOne.Controllers
             if (course == null)
             {
                 ModelState.AddModelError("", "The selected course does not exist.");
-                ViewBag.Courses = await context.Courses.Include(c => c.Instructor).ToListAsync();
+                ViewBag.Courses = await _context.Courses.Include(c => c.Instructor).ToListAsync();
                 return View("Enroll");
             }
-
-            // Log for debugging
-            Console.WriteLine($"Course enrollments: {course.Enrollments.Count}, Max capacity: {course.MaxCapacity}");
 
             if (course.Enrollments.Count >= course.MaxCapacity)
             {
                 ModelState.AddModelError("", "This course has reached its maximum capacity.");
-                ViewBag.Courses = await context.Courses.Include(c => c.Instructor).ToListAsync();
+                ViewBag.Courses = await _context.Courses.Include(c => c.Instructor).ToListAsync();
                 return View("Enroll");
             }
 
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdClaim, out int studentId) && await enrollmentService.IsStudentEnrolledAsync(studentId, courseId))
+            int studentId = GetCurrentUserId();
+            if (await _enrollmentService.IsStudentEnrolledAsync(studentId, courseId))
             {
                 ModelState.AddModelError("", "You are already enrolled in this course.");
-                ViewBag.Courses = await context.Courses.Include(c => c.Instructor).ToListAsync();
+                ViewBag.Courses = await _context.Courses.Include(c => c.Instructor).ToListAsync();
                 return View("Enroll");
             }
 
             return View("EnrollPost", course);
         }
 
-
         [HttpPost]
         public async Task<IActionResult> ConfirmEnrollment(int courseId)
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdClaim, out int studentId))
+            int studentId = GetCurrentUserId();
+            var enrollmentSuccessful = await _enrollmentService.EnrollStudentAsync(studentId, courseId);
+            if (enrollmentSuccessful)
             {
-                var enrollmentSuccessful = await enrollmentService.EnrollStudentAsync(studentId, courseId);
-                if (enrollmentSuccessful)
-                {
-                    ViewBag.Message = "Enrollment successful!";
-                    return RedirectToAction("MyCourses");
-                }
+                ViewBag.Message = "Enrollment successful!";
+                return RedirectToAction("MyCourses");
             }
             ModelState.AddModelError("", "An error occurred while trying to enroll.");
             return RedirectToAction("Enroll", new { courseId });
@@ -309,18 +291,13 @@ namespace DinarkTaskOne.Controllers
         [HttpGet]
         public async Task<IActionResult> ViewCourse(int courseId)
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdClaim, out int studentId))
-            {
-                return Unauthorized();
-            }
+            var studentId = GetCurrentUserId();
 
-            // Fetch the course along with its materials, announcements, and quizzes
-            var course = await context.Courses
+            var course = await _context.Courses
                 .Include(c => c.Materials)
                 .Include(c => c.Announcements)
                 .Include(c => c.Quizzes)
-                .ThenInclude(q => q.Questions) // To get question marks
+                .ThenInclude(q => q.Questions)
                 .FirstOrDefaultAsync(c => c.CourseId == courseId);
 
             if (course == null)
@@ -328,38 +305,45 @@ namespace DinarkTaskOne.Controllers
                 return NotFound("Course not found.");
             }
 
-            // Get the list of completed quizzes and corresponding attempts
-            var completedAttempts = await context.Attempts
+            var completedAttempts = await _context.Attempts
                 .Where(a => a.Quiz.CourseId == courseId && a.StudentId == studentId && a.Completed)
                 .ToListAsync();
 
             var completedQuizzes = completedAttempts.Select(a => a.QuizId).ToList();
             var completedAttemptsDict = completedAttempts.ToDictionary(a => a.QuizId, a => a.AttemptId);
 
-            // Calculate the total quiz score for the student
-
-
-
             var combinedQuizScore = completedAttempts.Sum(a => a.Score.Value);
-            int totalMaxScore = course.Quizzes.Sum(q => q.Questions.Sum(qn =>
-            {
-                return qn is null ? throw new ArgumentNullException(nameof(qn)) : qn.Marks;
-            }));
+            int totalMaxScore = course.Quizzes.Sum(q => q.Questions.Sum(qn => qn.Marks));
 
-            // Calculate the student's percentage score
             var percentageScore = totalMaxScore > 0
                 ? (combinedQuizScore / (double)totalMaxScore) * 100
                 : 0;
 
-            // Combine and order the content (materials, announcements, and quizzes)
-            var allContent = new List<dynamic>();
-            allContent.AddRange(course.Materials.Select(m => new { Type = "Material", m.CreatedAt, Content = m }));
-            allContent.AddRange(course.Announcements.Select(a => new { Type = "Announcement", a.CreatedAt, Content = a }));
-            allContent.AddRange(course.Quizzes.Select(q => new { Type = "Quiz", q.CreatedAt, Content = q }));
+            var sortedContent = new List<CourseContentViewModel>();
 
-            var sortedContent = allContent.OrderByDescending(c => c.CreatedAt).ToList();
+            sortedContent.AddRange(course.Materials.Select(m => new CourseContentViewModel
+            {
+                Type = "Material",
+                Material = m,
+                CreatedAt = m.CreatedAt
+            }));
 
-            // Build the view model to pass to the view
+            sortedContent.AddRange(course.Announcements.Select(a => new CourseContentViewModel
+            {
+                Type = "Announcement",
+                Announcement = a,
+                CreatedAt = a.CreatedAt
+            }));
+
+            sortedContent.AddRange(course.Quizzes.Select(q => new CourseContentViewModel
+            {
+                Type = "Quiz",
+                Quiz = q,
+                CreatedAt = q.CreatedAt
+            }));
+
+            sortedContent = sortedContent.OrderByDescending(c => c.CreatedAt).ToList();
+
             var viewModel = new CourseViewModel
             {
                 CourseId = courseId,
@@ -369,7 +353,7 @@ namespace DinarkTaskOne.Controllers
                 CombinedQuizScore = combinedQuizScore,
                 MaxPossibleScore = totalMaxScore,
                 PercentageScore = percentageScore,
-                CompletedQuizzes = completedQuizzes, 
+                CompletedQuizzes = completedQuizzes,
                 CompletedAttempts = completedAttemptsDict
             };
 

@@ -1,5 +1,4 @@
-﻿using DinarkTaskOne.Models.Institution;
-using DinarkTaskOne.Models.ManageCourse;
+﻿using DinarkTaskOne.Models.ManageCourse;
 using DinarkTaskOne.Models.UserSpecficModels;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -18,10 +17,13 @@ namespace DinarkTaskOne.Models.Institution
         public int DepartmentId { get; set; }
         public DepartmentModel Department { get; set; } = null!;
 
-        // Relationship with Courses (many-to-many)
-        public ICollection<CourseModel> Courses { get; set; } = new List<CourseModel>();
+        // Remove the CourseMajors relationship as it's no longer needed
+        // public ICollection<CourseMajor> CourseMajors { get; set; } = new List<CourseMajor>();
 
         // Relationship with Students
         public ICollection<StudentModel> Students { get; set; } = new List<StudentModel>();
+
+        // Optional: Add a helper property if needed to access related courses based on the AllowedMajors in the CourseModel
+        public ICollection<CourseModel> RelatedCourses { get; set; } = new List<CourseModel>();
     }
 }

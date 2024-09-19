@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DinarkTaskOne.Migrations
 {
     /// <inheritdoc />
-    public partial class PhaseOne : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -70,7 +70,7 @@ namespace DinarkTaskOne.Migrations
                         column: x => x.DepartmentId,
                         principalTable: "Departments",
                         principalColumn: "DepartmentId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -83,7 +83,7 @@ namespace DinarkTaskOne.Migrations
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PhoneNumber = table.Column<int>(type: "int", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RoleId = table.Column<int>(type: "int", nullable: false),
                     UserType = table.Column<string>(type: "nvarchar(13)", maxLength: 13, nullable: false),
@@ -97,10 +97,14 @@ namespace DinarkTaskOne.Migrations
                         name: "FK_Users_Departments_DepartmentId",
                         column: x => x.DepartmentId,
                         principalTable: "Departments",
-                        principalColumn: "DepartmentId",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "DepartmentId");
                     table.ForeignKey(
                         name: "FK_Users_Majors_MajorId",
+                        column: x => x.MajorId,
+                        principalTable: "Majors",
+                        principalColumn: "MajorId");
+                    table.ForeignKey(
+                        name: "FK_Users_Majors_MajorId1",
                         column: x => x.MajorId,
                         principalTable: "Majors",
                         principalColumn: "MajorId",
@@ -123,10 +127,13 @@ namespace DinarkTaskOne.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     InstructorId = table.Column<int>(type: "int", nullable: false),
                     DepartmentId = table.Column<int>(type: "int", nullable: false),
+                    AllowedMajors = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     MaxCapacity = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CourseEndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    MajorModelMajorId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -137,6 +144,11 @@ namespace DinarkTaskOne.Migrations
                         principalTable: "Departments",
                         principalColumn: "DepartmentId",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Courses_Majors_MajorModelMajorId",
+                        column: x => x.MajorModelMajorId,
+                        principalTable: "Majors",
+                        principalColumn: "MajorId");
                     table.ForeignKey(
                         name: "FK_Courses_Users_InstructorId",
                         column: x => x.InstructorId,
@@ -164,30 +176,6 @@ namespace DinarkTaskOne.Migrations
                         column: x => x.CourseId,
                         principalTable: "Courses",
                         principalColumn: "CourseId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CourseMajors",
-                columns: table => new
-                {
-                    AllowedMajorsMajorId = table.Column<int>(type: "int", nullable: false),
-                    CoursesCourseId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CourseMajors", x => new { x.AllowedMajorsMajorId, x.CoursesCourseId });
-                    table.ForeignKey(
-                        name: "FK_CourseMajors_Courses_CoursesCourseId",
-                        column: x => x.CoursesCourseId,
-                        principalTable: "Courses",
-                        principalColumn: "CourseId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CourseMajors_Majors_AllowedMajorsMajorId",
-                        column: x => x.AllowedMajorsMajorId,
-                        principalTable: "Majors",
-                        principalColumn: "MajorId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -233,13 +221,13 @@ namespace DinarkTaskOne.Migrations
                         column: x => x.CourseId,
                         principalTable: "Courses",
                         principalColumn: "CourseId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Enrollments_Users_StudentId",
                         column: x => x.StudentId,
                         principalTable: "Users",
                         principalColumn: "UserId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -293,7 +281,7 @@ namespace DinarkTaskOne.Migrations
                         column: x => x.StudentId,
                         principalTable: "Users",
                         principalColumn: "UserId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -363,7 +351,7 @@ namespace DinarkTaskOne.Migrations
                         column: x => x.AttemptId,
                         principalTable: "Attempt",
                         principalColumn: "AttemptId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_QuestionAnswer_Question_QuestionId",
                         column: x => x.QuestionId,
@@ -423,11 +411,6 @@ namespace DinarkTaskOne.Migrations
                 column: "CourseId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CourseMajors_CoursesCourseId",
-                table: "CourseMajors",
-                column: "CoursesCourseId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_CourseMaterials_CourseId",
                 table: "CourseMaterials",
                 column: "CourseId");
@@ -441,6 +424,11 @@ namespace DinarkTaskOne.Migrations
                 name: "IX_Courses_InstructorId",
                 table: "Courses",
                 column: "InstructorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Courses_MajorModelMajorId",
+                table: "Courses",
+                column: "MajorModelMajorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Enrollments_CourseId",
@@ -503,9 +491,6 @@ namespace DinarkTaskOne.Migrations
         {
             migrationBuilder.DropTable(
                 name: "CourseAnnouncements");
-
-            migrationBuilder.DropTable(
-                name: "CourseMajors");
 
             migrationBuilder.DropTable(
                 name: "CourseMaterials");

@@ -4,13 +4,23 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using DinarkTaskOne.Data;
 using DinarkTaskOne.Models.ManageCourse;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using DinarkTaskOne.Models.ViewModels;
+using System.Linq;
 
 namespace DinarkTaskOne.Controllers
 {
     [Authorize(Roles = "Instructor")]
-    public class CourseController(ApplicationDbContext context) : Controller
+    public class CourseController : Controller
     {
-        // Helper methods to get the current user's ID and role
+        private readonly ApplicationDbContext _context;
+
+        public CourseController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        // Helper method to get the current user's ID
         private int GetCurrentUserId()
         {
             var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -18,80 +28,168 @@ namespace DinarkTaskOne.Controllers
             return int.Parse(userIdValue);
         }
 
-        // 1. Create Course
+        // 1. Create Course - GET
         [HttpGet]
-        public IActionResult CreateCourse()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateCourse(CourseModel course)
+        public async Task<IActionResult> CreateCourse()
         {
             var instructorId = GetCurrentUserId();
 
-            // Check if the instructor is authorized
-            var instructor = await context.Users
-                .FirstOrDefaultAsync(u => u.UserId == instructorId && u.RoleId == 1 && u.UserType == "Instructor");
+            var instructor = await _context.Instructors
+                .Include(i => i.Department)
+                .FirstOrDefaultAsync(i => i.UserId == instructorId);
 
             if (instructor == null)
             {
-                return View(course);
+                return Unauthorized("Unauthorized access.");
             }
 
-            // Set CreatedAt and UpdatedAt fields
-            course.CreatedAt = DateTime.UtcNow;
-            course.UpdatedAt = DateTime.UtcNow;
-            course.InstructorId = instructorId;
+            // Fetch all majors, not restricted to the department
+            var majors = await _context.Majors
+                .Select(m => new SelectListItem
+                {
+                    Value = m.MajorId.ToString(),
+                    Text = m.Name
+                }).ToListAsync();
 
-            context.Courses.Add(course);
-            await context.SaveChangesAsync();
+            var model = new CourseViewModel
+            {
+                AvailableMajors = majors,
+                Title = "",
+                Description = ""
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateCourse(CourseViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                var majors = await _context.Majors
+                    .Select(m => new SelectListItem
+                    {
+                        Value = m.MajorId.ToString(),
+                        Text = m.Name
+                    }).ToListAsync();
+
+                model.AvailableMajors = majors;
+                return View(model);
+            }
+
+            var instructorDetails = await _context.Instructors
+                .Include(i => i.Department)
+                .FirstOrDefaultAsync(i => i.UserId == GetCurrentUserId());
+
+            if (instructorDetails == null)
+            {
+                return Unauthorized("Unauthorized access.");
+            }
+
+            var allowedMajors = model.SelectedMajors != null && model.SelectedMajors.Any()
+                ? string.Join(",", model.SelectedMajors)
+                : string.Empty;
+
+            var course = new CourseModel
+            {
+                Title = model.Title,
+                Description = model.Description,
+                MaxCapacity = model.MaxCapacity,
+                CourseEndTime = model.CourseEndTime,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                DepartmentId = instructorDetails.DepartmentId ?? 0,
+                InstructorId = GetCurrentUserId(),
+                AllowedMajors = allowedMajors // Save the selected majors as a string
+            };
+
+            _context.Courses.Add(course);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("CourseConfig", new { id = course.CourseId });
         }
 
 
-        // 2. Edit Course
+        // 2. Edit Course - GET
         [HttpGet]
         public async Task<IActionResult> EditCourse(int id)
         {
-            var course = await context.Courses.FindAsync(id);
-            if (course == null || course.InstructorId != GetCurrentUserId())
+            var course = await _context.Courses
+                .FirstOrDefaultAsync(c => c.CourseId == id && c.InstructorId == GetCurrentUserId());
+
+            if (course == null)
             {
                 return NotFound("Course not found or unauthorized access.");
             }
 
-            return View(course);
+            var selectedMajors = course.AllowedMajors.Split(',')
+                .Where(m => !string.IsNullOrEmpty(m))
+                .Select(int.Parse)
+                .ToList();
+
+            var model = new CourseViewModel
+            {
+                CourseId = course.CourseId,
+                Title = course.Title,
+                Description = course.Description,
+                MaxCapacity = course.MaxCapacity,
+                CourseEndTime = course.CourseEndTime,
+                //SelectedMajors = selectedMajors,
+                AvailableMajors = await _context.Majors
+                    .Select(m => new SelectListItem
+                    {
+                        Value = m.MajorId.ToString(),
+                        Text = m.Name
+                    }).ToListAsync()
+            };
+
+            return View(model);
         }
 
+        // 2. Edit Course - POST
         [HttpPost]
-        public async Task<IActionResult> EditCourse(CourseModel course)
+        public async Task<IActionResult> EditCourse(CourseViewModel model)
         {
-            var existingCourse = await context.Courses
-                .Where(c => c.CourseId == course.CourseId && c.InstructorId == GetCurrentUserId())
-                .FirstOrDefaultAsync();
+            if (!ModelState.IsValid)
+            {
+                // Re-fetch available majors if model state is invalid
+                model.AvailableMajors = await _context.Majors
+                    .Select(m => new SelectListItem
+                    {
+                        Value = m.MajorId.ToString(),
+                        Text = m.Name
+                    }).ToListAsync();
+                return View(model);
+            }
+
+            var existingCourse = await _context.Courses
+                .FirstOrDefaultAsync(c => c.CourseId == model.CourseId && c.InstructorId == GetCurrentUserId());
 
             if (existingCourse == null)
             {
                 return Unauthorized("Unauthorized access or course not found.");
             }
 
-            existingCourse.Title = course.Title;
-            existingCourse.Description = course.Description;
-            existingCourse.UpdatedAt = DateTime.UtcNow; // Update timestamp
+            existingCourse.Title = model.Title;
+            existingCourse.Description = model.Description;
+            existingCourse.MaxCapacity = model.MaxCapacity;
+            existingCourse.CourseEndTime = model.CourseEndTime;
+            existingCourse.UpdatedAt = DateTime.UtcNow;
+            existingCourse.AllowedMajors = model.SelectedMajors != null && model.SelectedMajors.Any()
+                ? string.Join(",", model.SelectedMajors)
+                : string.Empty;
 
-            context.Courses.Update(existingCourse);
-            await context.SaveChangesAsync();
+            _context.Courses.Update(existingCourse);
+            await _context.SaveChangesAsync();
 
-            return RedirectToAction("CourseConfig", new { id = course.CourseId });
+            return RedirectToAction("CourseConfig", new { id = existingCourse.CourseId });
         }
 
-        // 3. Delete Course
+        // 3. Delete Course - POST
         [HttpPost]
         public async Task<IActionResult> DeleteCourse(int id)
         {
-            // Find the course
-            var course = await context.Courses
+            var course = await _context.Courses
                 .Include(c => c.Enrollments) // Include related enrollments
                 .FirstOrDefaultAsync(c => c.CourseId == id && c.InstructorId == GetCurrentUserId());
 
@@ -101,28 +199,27 @@ namespace DinarkTaskOne.Controllers
             }
 
             // Remove related enrollments first
-            if (course.Enrollments.Count != 0)
+            if (course.Enrollments.Any())
             {
-                context.Enrollments.RemoveRange(course.Enrollments);
+                _context.Enrollments.RemoveRange(course.Enrollments);
             }
 
-            // Remove the course
-            context.Courses.Remove(course);
-            await context.SaveChangesAsync();
+            _context.Courses.Remove(course);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("CoursesDashboard");
         }
 
-        // 4. View Enrolled Students
+        // 4. View Enrolled Students - GET
         [HttpGet]
         public async Task<IActionResult> ViewStudents(int id)
         {
-            var course = await context.Courses
+            var course = await _context.Courses
                 .Include(c => c.Enrollments)
                 .ThenInclude(e => e.Student)
-                .FirstOrDefaultAsync(c => c.CourseId == id);
+                .FirstOrDefaultAsync(c => c.CourseId == id && c.InstructorId == GetCurrentUserId());
 
-            if (course == null || course.InstructorId != GetCurrentUserId())
+            if (course == null)
             {
                 return NotFound("Course not found or unauthorized access.");
             }
@@ -130,22 +227,22 @@ namespace DinarkTaskOne.Controllers
             return View(course.Enrollments);
         }
 
-        // 5. Courses Dashboard
+        // 5. Courses Dashboard - GET
         [HttpGet]
         public async Task<IActionResult> CoursesDashboard()
         {
             var userId = GetCurrentUserId();
-            var courses = await context.Courses
+            var courses = await _context.Courses
                 .Where(c => c.InstructorId == userId)
                 .ToListAsync();
 
             return View(courses);
         }
 
-        // 6. Course Configuration
+        // 6. Course Configuration - GET
         public IActionResult CourseConfig(int id)
         {
-            var course = context.Courses
+            var course = _context.Courses
                 .Include(c => c.Materials)
                 .Include(c => c.Announcements)
                 .Include(c => c.Quizzes)
@@ -156,20 +253,45 @@ namespace DinarkTaskOne.Controllers
                 return NotFound("Course not found.");
             }
 
-            // Combine materials, announcements, and quizzes into a single list and sort by CreatedAt
-            var allContent = new List<dynamic>();
+            // Create a new CourseViewModel instance
+            var courseViewModel = new CourseViewModel
+            {
+                CourseId = course.CourseId,
+                Title = course.Title,
+                Description = course.Description,
+                MaxCapacity = course.MaxCapacity,
+                CourseEndTime = course.CourseEndTime,
+                SortedContent = new List<CourseContentViewModel>()
+            };
 
-            allContent.AddRange(course.Materials.Select(m => new { Type = "Material", m.CreatedAt, Content = m }));
-            allContent.AddRange(course.Announcements.Select(a => new { Type = "Announcement", a.CreatedAt, Content = a }));
-            allContent.AddRange(course.Quizzes.Select(q => new { Type = "Quiz", q.CreatedAt, Content = q }));
+            // Add materials to the view model
+            courseViewModel.SortedContent.AddRange(course.Materials.Select(m => new CourseContentViewModel
+            {
+                Type = "Material",
+                Material = m,
+                CreatedAt = m.CreatedAt
+            }));
 
-            // Sort by CreatedAt in descending order
-            var sortedContent = allContent.OrderByDescending(c => c.CreatedAt).ToList();
+            // Add announcements to the view model
+            courseViewModel.SortedContent.AddRange(course.Announcements.Select(a => new CourseContentViewModel
+            {
+                Type = "Announcement",
+                Announcement = a,
+                CreatedAt = a.CreatedAt
+            }));
 
-            // Pass the sorted content to the view
-            ViewBag.SortedContent = sortedContent;
+            // Add quizzes to the view model
+            courseViewModel.SortedContent.AddRange(course.Quizzes.Select(q => new CourseContentViewModel
+            {
+                Type = "Quiz",
+                Quiz = q,
+                CreatedAt = q.CreatedAt
+            }));
 
-            return View(course);
+            // Sort the combined content by CreatedAt property in descending order
+            courseViewModel.SortedContent = courseViewModel.SortedContent.OrderByDescending(c => c.CreatedAt).ToList();
+
+            return View(courseViewModel);
         }
 
 

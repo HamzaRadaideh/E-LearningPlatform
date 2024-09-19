@@ -15,12 +15,12 @@ namespace DinarkTaskOne.Models.Institution
         public string Name { get; set; } = string.Empty;
 
         // Relationship with Majors
-        public ICollection<MajorModel> Majors { get; set; } = new List<MajorModel>();
+        public ICollection<MajorModel> Majors { get; set; } = [];
 
         // Relationship with Courses
-        public ICollection<CourseModel> Courses { get; set; } = new List<CourseModel>();
+        public ICollection<CourseModel> Courses { get; set; } = [];
 
         // Relationship with Instructors
-        public ICollection<InstructorModel> Instructors { get; set; } = new List<InstructorModel>();
+        public ICollection<InstructorModel> Instructors { get; set; } = [];
     }
 }

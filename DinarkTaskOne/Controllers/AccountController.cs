@@ -110,11 +110,10 @@ namespace DinarkTaskOne.Controllers
 
             user.PasswordHash = signService.HashPassword(model.NewPassword);
             await signService.UpdateUserAsync(user);
-            ViewBag.Message = "Password updated successfully!";
 
-            return View();
+            TempData["Message"] = "Password updated successfully!";
+            return RedirectToAction("Settings");
         }
-
 
         private async Task<UsersModel?> GetCurrentUserAsync()
         {

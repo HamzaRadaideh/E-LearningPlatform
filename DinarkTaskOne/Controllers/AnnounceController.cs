@@ -8,8 +8,14 @@ using System.Security.Claims;
 namespace DinarkTaskOne.Controllers
 {
     [Authorize(Roles = "Instructor")]
-    public class AnnounceController(ApplicationDbContext context) : Controller
+    public class AnnounceController : Controller
     {
+        private readonly ApplicationDbContext _context;
+
+        public AnnounceController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
 
         private int GetCurrentUserId()
         {
@@ -18,7 +24,7 @@ namespace DinarkTaskOne.Controllers
             return int.Parse(userIdValue);
         }
 
-        // 1. Make an Announcement
+        // 1. Make an Announcement - GET
         [HttpGet]
         public IActionResult MakeAnnouncement(int courseId)
         {
@@ -26,45 +32,56 @@ namespace DinarkTaskOne.Controllers
             return View();
         }
 
+        // 1. Make an Announcement - POST
         [HttpPost]
         public async Task<IActionResult> MakeAnnouncement(int courseId, string content, string type)
         {
-            var course = await context.Courses.FindAsync(courseId);
+            var instructorId = GetCurrentUserId();
+            var course = await _context.Courses
+                .Where(c => c.CourseId == courseId && c.InstructorId == instructorId)
+                .FirstOrDefaultAsync();
+
             if (course == null)
             {
-                return NotFound("Course not found.");
+                return NotFound("Course not found or unauthorized access.");
             }
 
             var announcement = new AnnouncementModel
             {
                 CourseId = courseId,
                 Content = content,
-                Type = type
+                Type = type,
+                CreatedAt = DateTime.UtcNow
             };
 
-            context.Announcements.Add(announcement);
-            await context.SaveChangesAsync();
+            _context.Announcements.Add(announcement);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("CourseConfig", "Course", new { id = courseId });
         }
 
-        // 2. Edit Announcement
+        // 2. Edit Announcement - GET
         [HttpGet]
         public async Task<IActionResult> EditAnnouncement(int id)
         {
-            var announcement = await context.Announcements.FindAsync(id);
+            var announcement = await _context.Announcements
+                .Include(a => a.Course)
+                .Where(a => a.AnnouncementId == id && a.Course.InstructorId == GetCurrentUserId())
+                .FirstOrDefaultAsync();
+
             if (announcement == null)
             {
-                return NotFound("Announcement not found.");
+                return NotFound("Announcement not found or unauthorized access.");
             }
 
             return View(announcement);
         }
 
+        // 2. Edit Announcement - POST
         [HttpPost]
         public async Task<IActionResult> EditAnnouncement(AnnouncementModel announcement)
         {
-            var existingAnnouncement = await context.Announcements
+            var existingAnnouncement = await _context.Announcements
                 .Include(a => a.Course)
                 .Where(a => a.AnnouncementId == announcement.AnnouncementId && a.Course.InstructorId == GetCurrentUserId())
                 .FirstOrDefaultAsync();
@@ -76,18 +93,19 @@ namespace DinarkTaskOne.Controllers
 
             existingAnnouncement.Content = announcement.Content;
             existingAnnouncement.Type = announcement.Type;
-            context.Announcements.Update(existingAnnouncement);
-            await context.SaveChangesAsync();
+            existingAnnouncement.UpdatedAt = DateTime.UtcNow;
+
+            _context.Announcements.Update(existingAnnouncement);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("CourseConfig", "Course", new { id = existingAnnouncement.CourseId });
         }
-
 
         // 3. Delete Announcement
         [HttpPost]
         public async Task<IActionResult> DeleteAnnouncement(int id)
         {
-            var announcement = await context.Announcements
+            var announcement = await _context.Announcements
                 .Include(a => a.Course)
                 .Where(a => a.AnnouncementId == id && a.Course.InstructorId == GetCurrentUserId())
                 .FirstOrDefaultAsync();
@@ -97,8 +115,8 @@ namespace DinarkTaskOne.Controllers
                 return NotFound("Announcement not found or unauthorized access.");
             }
 
-            context.Announcements.Remove(announcement);
-            await context.SaveChangesAsync();
+            _context.Announcements.Remove(announcement);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("CourseConfig", "Course", new { id = announcement.CourseId });
         }
