@@ -1,9 +1,9 @@
-﻿using DinarkTaskOne.Models.Institution;
-using DinarkTaskOne.Models.MakeQuiz;
-using DinarkTaskOne.Models.UserSpecficModels;
+﻿using DinarkTaskOne.Models.UserSpecficModels;
+using DinarkTaskOne.Models.Institution;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Collections.Generic;
+using DinarkTaskOne.Models.MakeQuiz;
 
 namespace DinarkTaskOne.Models.ManageCourse
 {
@@ -15,38 +15,53 @@ namespace DinarkTaskOne.Models.ManageCourse
         [Required]
         public string Title { get; set; } = string.Empty;
 
-        public string? Description { get; set; }
-
-        public int InstructorId { get; set; }
-        [ForeignKey("InstructorId")]
-        public InstructorModel Instructor { get; set; } = null!;
-
-        public int DepartmentId { get; set; }
-        [ForeignKey("DepartmentId")]
-        public DepartmentModel Department { get; set; } = null!;
-
-        // Removed CourseMajor relationship
         [Required]
-        public string AllowedMajors { get; set; } = ""; // Store comma-separated major IDs
+        public string Description { get; set; } = string.Empty;
 
-        public ICollection<QuizModel> Quizzes { get; set; } = new List<QuizModel>();
-        public ICollection<MaterialsModel> Materials { get; set; } = new List<MaterialsModel>();
-        public ICollection<EnrollModel> Enrollments { get; set; } = new List<EnrollModel>();
-        public ICollection<AnnouncementModel> Announcements { get; set; } = new List<AnnouncementModel>();
+        [Required]
+        public int InstructorId { get; set; }
+        public InstructorModel Instructor { get; set; } = null!; // Reference to Instructor
+
+        [Required]
+        public int DepartmentId { get; set; }
+        public DepartmentModel Department { get; set; } = null!; // Reference to Department
+
+        [Required]
+        public int LevelId { get; set; }
+        public LevelModel Level { get; set; } = null!; // Reference to Level
 
         [Required]
         [Range(1, 200)]
         public int MaxCapacity { get; set; } = 200;
 
+        [Required]
+        public string AllowedMajors { get; set; } = string.Empty; // Comma-separated Major IDs
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
-        [MaxLength(50)]
-        public string Status { get; set; } = "Active";
+        public StatusType Status { get; set; }
 
-        // Property to store the course end date and time
         [Required]
         public DateTime CourseEndTime { get; set; }
+
+        // Relationship with Enrollments and Grades
+        public ICollection<EnrollModel> Enrollments { get; set; } = [];
+
+
+        public ICollection<QuizModel> Quizzes { get; set; } = [];
+        public ICollection<MaterialsModel> Materials { get; set; } = [];
+        public ICollection<AnnouncementModel> Announcements { get; set; } = [];
     }
+
+    public enum StatusType
+    {
+        Active = 0,
+        Completed = 1,
+        Cancelled = 2,
+        Soon = 3,
+        unavailable = 4
+    }
+
 }

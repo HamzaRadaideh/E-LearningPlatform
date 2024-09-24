@@ -39,8 +39,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add health checks for database and distributed cache
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Database connection string is not configured.");
+}
+
 builder.Services.AddHealthChecks()
-    .AddSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    .AddSqlServer(connectionString);
+
 
 // Register the SignService and EnrollmentService as scoped dependencies
 builder.Services.AddScoped<ISignService, SignService>();
@@ -61,13 +69,13 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Add authorization policies for Admin and Instructor
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOnly", policy =>
-        policy.RequireRole("Admin"));
-    options.AddPolicy("InstructorOnly", policy =>
+builder.Services.AddAuthorizationBuilder()
+                                                          // Add authorization policies for Admin and Instructor
+                                                          .AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("Admin"))
+                                                          // Add authorization policies for Admin and Instructor
+                                                          .AddPolicy("InstructorOnly", policy =>
         policy.RequireRole("Instructor"));
-});
 
 // Add Razor Pages support
 builder.Services.AddRazorPages();

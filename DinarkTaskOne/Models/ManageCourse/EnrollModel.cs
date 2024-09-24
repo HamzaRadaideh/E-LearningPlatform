@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using DinarkTaskOne.Models.UserSpecficModels;
+using System;
 using System.ComponentModel.DataAnnotations;
-using DinarkTaskOne.Models.UserSpecficModels;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DinarkTaskOne.Models.ManageCourse
 {
@@ -10,21 +11,18 @@ namespace DinarkTaskOne.Models.ManageCourse
         [Key]
         public int EnrollmentId { get; set; }
 
+        [Required]
         public int CourseId { get; set; }
+        public CourseModel Course { get; set; } = null!; // Reference to Course
 
-        [ForeignKey("CourseId")]
-        public virtual CourseModel Course { get; set; } = null!;
-
+        [Required]
         public int StudentId { get; set; }
+        public StudentModel Student { get; set; } = null!; // Reference to Student
 
-        [ForeignKey("StudentId")]
-        public virtual StudentModel Student { get; set; } = null!;
-
-        // New fields
         public DateTime EnrolledAt { get; set; } = DateTime.UtcNow;
 
         [Required]
         [MaxLength(20)]
-        public string Status { get; set; } = "Active"; // Default status
+        public string Status { get; set; } = "Active"; // e.g., Active, Completed, Dropped
     }
 }

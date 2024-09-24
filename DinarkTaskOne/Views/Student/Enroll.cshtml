@@ -1,33 +1,90 @@
-﻿<div class="container mt-5">
+﻿@{
+    ViewData["Title"] = "Enroll in Course";
+}
+
+<div class="container mt-5">
     <div class="card shadow-sm border-0">
         <div class="card-header bg-primary text-white">
             <h3 class="mb-0">Enroll in Course</h3>
         </div>
         <div class="card-body">
+            <!-- Enrollment Form -->
             <form asp-action="EnrollPost" method="post">
+                @* Display any validation errors *@
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger mt-3" role="alert">
+                        @Html.ValidationSummary(true)
+                    </div>
+                }
+
                 <div class="mb-3">
                     <label for="courseId" class="form-label">Select Course:</label>
-                    <select class="form-control" id="courseId" name="courseId">
-                        @foreach (var course in ViewBag.Courses)
+                    <select class="form-control" id="courseId" name="courseId" required>
+                        <option value="">-- Select a Course --</option>
+                        @if (ViewBag.Courses != null && ViewBag.Courses.Count > 0)
                         {
-                            <option value="@course.CourseId">@course.Title - Instructor: @course.Instructor.FirstName @course.Instructor.LastName</option>
+                            @foreach (var course in ViewBag.Courses)
+                            {
+                                <option value="@course.CourseId">@course.Title - Instructor: @course.Instructor.FirstName @course.Instructor.LastName</option>
+                            }
+                        }
+                        else
+                        {
+                            <option value="" disabled>No courses available for enrollment</option>
                         }
                     </select>
                 </div>
+
                 <button type="submit" class="btn btn-primary w-100">Enroll Now</button>
             </form>
+
+            @* Display success or error message *@
             @if (ViewBag.Message != null)
             {
-                <div class="alert alert-success mt-3" role="alert">
+                <div class="alert @ViewBag.MessageType mt-3" role="alert">
                     @ViewBag.Message
-                </div>
-            }
-            @if (!ViewData.ModelState.IsValid)
-            {
-                <div class="alert alert-danger mt-3" role="alert">
-                    @Html.ValidationSummary(true)
                 </div>
             }
         </div>
     </div>
 </div>
+
+<!-- Additional Scripts if needed -->
+@section Scripts {
+    <script>
+        // Script to handle form validation messages
+        $(document).ready(function () {
+            // If there is a message in the ViewBag, scroll to the message and highlight it
+            var messageDiv = $(".alert");
+            if (messageDiv.length) {
+                $('html, body').animate({
+                    scrollTop: messageDiv.offset().top - 50
+                }, 500);
+                messageDiv.fadeOut().fadeIn(); // Flash the message to grab attention
+            }
+        });
+
+        // Optional: Display a confirmation dialog when the user tries to enroll
+        $('form').on('submit', function (e) {
+            var selectedCourse = $('#courseId option:selected').text();
+            if (selectedCourse.trim() === "-- Select a Course --") {
+                // Prevent submission if no course is selected
+                e.preventDefault();
+                alert('Please select a course to enroll.');
+                return;
+            }
+
+            // Confirmation message before submitting the form
+            var confirmation = confirm('Are you sure you want to enroll in ' + selectedCourse + '?');
+            if (!confirmation) {
+                e.preventDefault(); // Prevent form submission if user cancels
+            }
+        });
+
+        // Optional: Disable the submit button after the form is submitted to prevent double submission
+        $('form').on('submit', function () {
+            $('button[type="submit"]').prop('disabled', true).text('Processing...');
+        });
+    </script>
+}

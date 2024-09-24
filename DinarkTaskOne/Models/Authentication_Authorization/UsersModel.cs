@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using DinarkTaskOne.Models.Institution;
 
 namespace DinarkTaskOne.Models.Authentication_Authorization
 {
@@ -8,7 +7,7 @@ namespace DinarkTaskOne.Models.Authentication_Authorization
     public class UsersModel
     {
         [Key]
-        public int UserId { get; set; }
+        public int UserId { get; set; } // Primary key for all user types
 
         [Required]
         public string FirstName { get; set; } = string.Empty;
@@ -22,7 +21,6 @@ namespace DinarkTaskOne.Models.Authentication_Authorization
         [Required]
         public string Email { get; set; } = string.Empty;
 
-        // Change PhoneNumber to string to handle different formats
         [Required]
         public string PhoneNumber { get; set; } = string.Empty;
 
@@ -33,16 +31,9 @@ namespace DinarkTaskOne.Models.Authentication_Authorization
 
         [Required]
         [MaxLength(13)]
-        public string UserType { get; set; } = string.Empty;
+        public string UserType { get; set; } = string.Empty; // User type discriminator
 
-        // Nullable DepartmentId and MajorId
-        public int? DepartmentId { get; set; }
-        public DepartmentModel? Department { get; set; }
-
-        public int? MajorId { get; set; }
-        public MajorModel? Major { get; set; }
-
-        // Role should not be nullable
+        // Role Relationship
         public RolesModel Role { get; set; } = null!;
     }
 }

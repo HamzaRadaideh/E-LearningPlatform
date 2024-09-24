@@ -27,6 +27,19 @@ namespace DinarkTaskOne.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Levels",
+                columns: table => new
+                {
+                    LevelId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Type = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Levels", x => x.LevelId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
@@ -87,7 +100,10 @@ namespace DinarkTaskOne.Migrations
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RoleId = table.Column<int>(type: "int", nullable: false),
                     UserType = table.Column<string>(type: "nvarchar(13)", maxLength: 13, nullable: false),
+                    InstructorId = table.Column<int>(type: "int", nullable: true),
                     DepartmentId = table.Column<int>(type: "int", nullable: true),
+                    StudentId = table.Column<int>(type: "int", nullable: true),
+                    CurrentLevelId = table.Column<int>(type: "int", nullable: true),
                     MajorId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -97,14 +113,16 @@ namespace DinarkTaskOne.Migrations
                         name: "FK_Users_Departments_DepartmentId",
                         column: x => x.DepartmentId,
                         principalTable: "Departments",
-                        principalColumn: "DepartmentId");
+                        principalColumn: "DepartmentId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Users_Levels_CurrentLevelId",
+                        column: x => x.CurrentLevelId,
+                        principalTable: "Levels",
+                        principalColumn: "LevelId",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Users_Majors_MajorId",
-                        column: x => x.MajorId,
-                        principalTable: "Majors",
-                        principalColumn: "MajorId");
-                    table.ForeignKey(
-                        name: "FK_Users_Majors_MajorId1",
                         column: x => x.MajorId,
                         principalTable: "Majors",
                         principalColumn: "MajorId",
@@ -124,11 +142,12 @@ namespace DinarkTaskOne.Migrations
                     CourseId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     InstructorId = table.Column<int>(type: "int", nullable: false),
                     DepartmentId = table.Column<int>(type: "int", nullable: false),
-                    AllowedMajors = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LevelId = table.Column<int>(type: "int", nullable: false),
                     MaxCapacity = table.Column<int>(type: "int", nullable: false),
+                    AllowedMajors = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
@@ -145,6 +164,12 @@ namespace DinarkTaskOne.Migrations
                         principalColumn: "DepartmentId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
+                        name: "FK_Courses_Levels_LevelId",
+                        column: x => x.LevelId,
+                        principalTable: "Levels",
+                        principalColumn: "LevelId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_Courses_Majors_MajorModelMajorId",
                         column: x => x.MajorModelMajorId,
                         principalTable: "Majors",
@@ -158,15 +183,75 @@ namespace DinarkTaskOne.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "StudentGrades",
+                columns: table => new
+                {
+                    StudentGradeId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    LevelId = table.Column<int>(type: "int", nullable: false),
+                    AverageScore = table.Column<double>(type: "float", nullable: false),
+                    HasPassed = table.Column<bool>(type: "bit", nullable: false),
+                    OverallGrade = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CalculatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StudentGrades", x => x.StudentGradeId);
+                    table.ForeignKey(
+                        name: "FK_StudentGrades_Levels_LevelId",
+                        column: x => x.LevelId,
+                        principalTable: "Levels",
+                        principalColumn: "LevelId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_StudentGrades_Users_StudentId",
+                        column: x => x.StudentId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StudentProgresses",
+                columns: table => new
+                {
+                    StudentProgressId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    LevelId = table.Column<int>(type: "int", nullable: false),
+                    Score = table.Column<double>(type: "float", nullable: false),
+                    IsCompleted = table.Column<bool>(type: "bit", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StudentProgresses", x => x.StudentProgressId);
+                    table.ForeignKey(
+                        name: "FK_StudentProgresses_Levels_LevelId",
+                        column: x => x.LevelId,
+                        principalTable: "Levels",
+                        principalColumn: "LevelId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_StudentProgresses_Users_StudentId",
+                        column: x => x.StudentId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CourseAnnouncements",
                 columns: table => new
                 {
                     AnnouncementId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CourseId = table.Column<int>(type: "int", nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    Content = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -180,16 +265,46 @@ namespace DinarkTaskOne.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CourseGrades",
+                columns: table => new
+                {
+                    CourseGradeId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CourseId = table.Column<int>(type: "int", nullable: false),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    Score = table.Column<double>(type: "float", nullable: false),
+                    HasPassed = table.Column<bool>(type: "bit", nullable: false),
+                    LetterGrade = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourseGrades", x => x.CourseGradeId);
+                    table.ForeignKey(
+                        name: "FK_CourseGrades_Courses_CourseId",
+                        column: x => x.CourseId,
+                        principalTable: "Courses",
+                        principalColumn: "CourseId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CourseGrades_Users_StudentId",
+                        column: x => x.StudentId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CourseMaterials",
                 columns: table => new
                 {
                     MaterialId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CourseId = table.Column<int>(type: "int", nullable: false),
-                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FileType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    FilePath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    FileType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -365,9 +480,22 @@ namespace DinarkTaskOne.Migrations
                 columns: new[] { "DepartmentId", "Name" },
                 values: new object[,]
                 {
+                    { -1, "Not in a Department" },
                     { 1, "Computer Science" },
                     { 2, "Information Systems" },
                     { 3, "Cyber Security" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Levels",
+                columns: new[] { "LevelId", "Type" },
+                values: new object[,]
+                {
+                    { -1, 0 },
+                    { 1, 1 },
+                    { 2, 2 },
+                    { 3, 3 },
+                    { 4, 4 }
                 });
 
             migrationBuilder.InsertData(
@@ -385,6 +513,7 @@ namespace DinarkTaskOne.Migrations
                 columns: new[] { "MajorId", "DepartmentId", "Name" },
                 values: new object[,]
                 {
+                    { -1, -1, "Not in a major" },
                     { 1, 1, "Computer Science" },
                     { 2, 2, "Information Systems" },
                     { 3, 3, "Cyber Security" }
@@ -411,6 +540,16 @@ namespace DinarkTaskOne.Migrations
                 column: "CourseId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CourseGrades_CourseId",
+                table: "CourseGrades",
+                column: "CourseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseGrades_StudentId",
+                table: "CourseGrades",
+                column: "StudentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CourseMaterials_CourseId",
                 table: "CourseMaterials",
                 column: "CourseId");
@@ -424,6 +563,11 @@ namespace DinarkTaskOne.Migrations
                 name: "IX_Courses_InstructorId",
                 table: "Courses",
                 column: "InstructorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Courses_LevelId",
+                table: "Courses",
+                column: "LevelId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Courses_MajorModelMajorId",
@@ -471,6 +615,31 @@ namespace DinarkTaskOne.Migrations
                 column: "CourseId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_StudentGrades_LevelId",
+                table: "StudentGrades",
+                column: "LevelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StudentGrades_StudentId",
+                table: "StudentGrades",
+                column: "StudentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StudentProgresses_LevelId",
+                table: "StudentProgresses",
+                column: "LevelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StudentProgresses_StudentId",
+                table: "StudentProgresses",
+                column: "StudentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_CurrentLevelId",
+                table: "Users",
+                column: "CurrentLevelId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_DepartmentId",
                 table: "Users",
                 column: "DepartmentId");
@@ -493,6 +662,9 @@ namespace DinarkTaskOne.Migrations
                 name: "CourseAnnouncements");
 
             migrationBuilder.DropTable(
+                name: "CourseGrades");
+
+            migrationBuilder.DropTable(
                 name: "CourseMaterials");
 
             migrationBuilder.DropTable(
@@ -503,6 +675,12 @@ namespace DinarkTaskOne.Migrations
 
             migrationBuilder.DropTable(
                 name: "SessionCache");
+
+            migrationBuilder.DropTable(
+                name: "StudentGrades");
+
+            migrationBuilder.DropTable(
+                name: "StudentProgresses");
 
             migrationBuilder.DropTable(
                 name: "Answer");
@@ -521,6 +699,9 @@ namespace DinarkTaskOne.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Levels");
 
             migrationBuilder.DropTable(
                 name: "Majors");

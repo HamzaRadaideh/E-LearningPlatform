@@ -1,9 +1,9 @@
 ﻿using DinarkTaskOne.Data;
 using DinarkTaskOne.Models.Authentication_Authorization;
+using DinarkTaskOne.Models.UserSpecficModels;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DinarkTaskOne.Services
 {
@@ -12,44 +12,70 @@ namespace DinarkTaskOne.Services
         public async Task RegisterUserAsync(UsersModel user, string password)
         {
             user.PasswordHash = HashPassword(password);
-            context.Users.Add(user);
+
+            if (user is InstructorModel instructor)
+            {
+                instructor.InstructorId = 0; // Ensure it's set to 0 so it will auto-increment in the database
+                context.Instructors.Add(instructor);
+            }
+            else if (user is StudentModel student)
+            {
+                student.StudentId = 0; // Ensure it's set to 0 so it will auto-increment in the database
+                context.Students.Add(student);
+            }
+            else
+            {
+                context.Users.Add(user);
+            }
+
             await context.SaveChangesAsync();
         }
 
+
+        // Fixing the method for validating a user by email and password
         public async Task<bool> ValidateUserAsync(string email, string password)
         {
             var user = await context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == email);
 
-            return user != null && VerifyPassword(password, user.PasswordHash);
+            // Avoiding possible null return by using null check
+            if (user == null) return false;
+
+            return VerifyPassword(password, user.PasswordHash);
         }
 
+        // Fixing the method for validating a user by userId and password
         public async Task<bool> ValidateUserAsync(int userId, string password)
         {
             var user = await context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.UserId == userId);
 
-            return user != null && VerifyPassword(password, user.PasswordHash);
+            // Avoiding possible null return by using null check
+            if (user == null) return false;
+
+            return VerifyPassword(password, user.PasswordHash);
         }
 
-        public async Task<UsersModel> GetUserByIdAsync(int userId)
+        public async Task<UsersModel?> GetUserByIdAsync(int userId)
         {
-#pragma warning disable CS8603 // Possible null reference return.
-            return await context.Users
+            var user = await context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.UserId == userId);
-#pragma warning restore CS8603 // Possible null reference return.
+
+            // If user is null, throw an exception or handle it appropriately
+            return user ?? throw new Exception("User not found.");
         }
 
-        public async Task<UsersModel> GetUserByEmailAsync(string email)
+        public async Task<UsersModel?> GetUserByEmailAsync(string email)
         {
-#pragma warning disable CS8603 // Possible null reference return.
-            return await context.Users
+            var user = await context.Users
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == email);
-#pragma warning restore CS8603 // Possible null reference return.
+
+            // If user is null, throw an exception or handle it appropriately
+            return user ?? throw new Exception("User not found.");
         }
 
         public async Task UpdateUserAsync(UsersModel user)

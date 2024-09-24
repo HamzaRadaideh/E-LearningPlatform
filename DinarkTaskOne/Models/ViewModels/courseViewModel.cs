@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using DinarkTaskOne.Models.ManageCourse;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
 
 namespace DinarkTaskOne.Models.ViewModels
@@ -26,14 +27,31 @@ namespace DinarkTaskOne.Models.ViewModels
         public double PercentageScore { get; set; }
 
         // New properties for completed quizzes
-        public List<int> CompletedQuizzes { get; set; } = new List<int>();
+        public List<int> CompletedQuizzes { get; set; } = [];
 
-        public Dictionary<int, int> CompletedAttempts { get; set; } = new Dictionary<int, int>();
+        public Dictionary<int, int> CompletedAttempts { get; set; } = [];
 
         // Property to hold the selected majors as a list of integers
-        public List<int> SelectedMajors { get; set; } = new List<int>();
+        public List<int> SelectedMajors { get; set; } = [];
 
         // List of available majors for selection
         public List<SelectListItem>? AvailableMajors { get; set; }
+
+        // List of available levels for selection
+        public List<SelectListItem>? AvailableLevels { get; set; }
+
+        // Selected level ID
+        public int SelectedLevelId { get; set; }
+
+        public ICollection<EnrollModel> Enrollments { get; set; } = [];
+
+        // New properties to display in ViewCourse
+        public StatusType Status { get; set; } // Status of the course
+
+        public double? StudentGrade { get; set; } // Student's grade in the course, if available
+
+        public string? OverallGrade { get; set; } // Overall grade letter
+        
+        public bool HasPassed { get; set; } // Whether the student has passed the course
     }
 }

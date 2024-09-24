@@ -6,19 +6,16 @@ using DinarkTaskOne.Data;
 using DinarkTaskOne.Models.ManageCourse;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using DinarkTaskOne.Models.ViewModels;
+using DinarkTaskOne.Models.student;
 using System.Linq;
+using System.Threading.Tasks;
+using System;
 
 namespace DinarkTaskOne.Controllers
 {
     [Authorize(Roles = "Instructor")]
-    public class CourseController : Controller
+    public class CourseController(ApplicationDbContext context) : Controller
     {
-        private readonly ApplicationDbContext _context;
-
-        public CourseController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
 
         // Helper method to get the current user's ID
         private int GetCurrentUserId()
@@ -28,13 +25,20 @@ namespace DinarkTaskOne.Controllers
             return int.Parse(userIdValue);
         }
 
+        // Helper method to check if a course belongs to the current instructor
+        private async Task<bool> IsInstructorAuthorizedAsync(int courseId)
+        {
+            var course = await context.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
+            return course != null && course.InstructorId == GetCurrentUserId();
+        }
+
         // 1. Create Course - GET
         [HttpGet]
         public async Task<IActionResult> CreateCourse()
         {
             var instructorId = GetCurrentUserId();
 
-            var instructor = await _context.Instructors
+            var instructor = await context.Instructors
                 .Include(i => i.Department)
                 .FirstOrDefaultAsync(i => i.UserId == instructorId);
 
@@ -43,17 +47,24 @@ namespace DinarkTaskOne.Controllers
                 return Unauthorized("Unauthorized access.");
             }
 
-            // Fetch all majors, not restricted to the department
-            var majors = await _context.Majors
+            var majors = await context.Majors
                 .Select(m => new SelectListItem
                 {
                     Value = m.MajorId.ToString(),
                     Text = m.Name
                 }).ToListAsync();
 
+            var levels = await context.Levels
+                .Select(l => new SelectListItem
+                {
+                    Value = l.LevelId.ToString(),
+                    Text = l.Type.ToString()
+                }).ToListAsync();
+
             var model = new CourseViewModel
             {
                 AvailableMajors = majors,
+                AvailableLevels = levels,
                 Title = "",
                 Description = ""
             };
@@ -61,23 +72,35 @@ namespace DinarkTaskOne.Controllers
             return View(model);
         }
 
+        // 1. Create Course - POST
         [HttpPost]
         public async Task<IActionResult> CreateCourse(CourseViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                var majors = await _context.Majors
+                var instructorId = GetCurrentUserId();
+
+                var majors = await context.Majors
+                    .Where(m => m.Department.Instructors.Any(i => i.UserId == instructorId))
                     .Select(m => new SelectListItem
                     {
                         Value = m.MajorId.ToString(),
                         Text = m.Name
                     }).ToListAsync();
 
+                var levels = await context.Levels
+                    .Select(l => new SelectListItem
+                    {
+                        Value = l.LevelId.ToString(),
+                        Text = l.Type.ToString()
+                    }).ToListAsync();
+
                 model.AvailableMajors = majors;
+                model.AvailableLevels = levels;
                 return View(model);
             }
 
-            var instructorDetails = await _context.Instructors
+            var instructorDetails = await context.Instructors
                 .Include(i => i.Department)
                 .FirstOrDefaultAsync(i => i.UserId == GetCurrentUserId());
 
@@ -86,7 +109,7 @@ namespace DinarkTaskOne.Controllers
                 return Unauthorized("Unauthorized access.");
             }
 
-            var allowedMajors = model.SelectedMajors != null && model.SelectedMajors.Any()
+            var allowedMajors = model.SelectedMajors != null && model.SelectedMajors.Count != 0
                 ? string.Join(",", model.SelectedMajors)
                 : string.Empty;
 
@@ -98,34 +121,53 @@ namespace DinarkTaskOne.Controllers
                 CourseEndTime = model.CourseEndTime,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                DepartmentId = instructorDetails.DepartmentId ?? 0,
+                DepartmentId = instructorDetails.DepartmentId,
                 InstructorId = GetCurrentUserId(),
-                AllowedMajors = allowedMajors // Save the selected majors as a string
+                AllowedMajors = allowedMajors,
+                LevelId = model.SelectedLevelId, // Save the selected level ID
+                Status = StatusType.Active
             };
 
-            _context.Courses.Add(course);
-            await _context.SaveChangesAsync();
+            context.Courses.Add(course);
+            await context.SaveChangesAsync();
 
             return RedirectToAction("CourseConfig", new { id = course.CourseId });
         }
-
 
         // 2. Edit Course - GET
         [HttpGet]
         public async Task<IActionResult> EditCourse(int id)
         {
-            var course = await _context.Courses
-                .FirstOrDefaultAsync(c => c.CourseId == id && c.InstructorId == GetCurrentUserId());
+            if (!await IsInstructorAuthorizedAsync(id))
+            {
+                return Unauthorized("Unauthorized access.");
+            }
 
+            var course = await context.Courses.FirstOrDefaultAsync(c => c.CourseId == id);
             if (course == null)
             {
-                return NotFound("Course not found or unauthorized access.");
+                return NotFound("Course not found.");
             }
 
             var selectedMajors = course.AllowedMajors.Split(',')
                 .Where(m => !string.IsNullOrEmpty(m))
                 .Select(int.Parse)
                 .ToList();
+
+            var availableMajors = await context.Majors
+                .Where(m => m.Department.Courses.Any(c => c.CourseId == id))
+                .Select(m => new SelectListItem
+                {
+                    Value = m.MajorId.ToString(),
+                    Text = m.Name
+                }).ToListAsync();
+
+            var availableLevels = await context.Levels
+                .Select(l => new SelectListItem
+                {
+                    Value = l.LevelId.ToString(),
+                    Text = l.Type.ToString()
+                }).ToListAsync();
 
             var model = new CourseViewModel
             {
@@ -134,13 +176,10 @@ namespace DinarkTaskOne.Controllers
                 Description = course.Description,
                 MaxCapacity = course.MaxCapacity,
                 CourseEndTime = course.CourseEndTime,
-                //SelectedMajors = selectedMajors,
-                AvailableMajors = await _context.Majors
-                    .Select(m => new SelectListItem
-                    {
-                        Value = m.MajorId.ToString(),
-                        Text = m.Name
-                    }).ToListAsync()
+                AvailableMajors = availableMajors,
+                AvailableLevels = availableLevels,
+                SelectedLevelId = course.LevelId,
+                SelectedMajors = selectedMajors
             };
 
             return View(model);
@@ -150,24 +189,37 @@ namespace DinarkTaskOne.Controllers
         [HttpPost]
         public async Task<IActionResult> EditCourse(CourseViewModel model)
         {
+            if (!await IsInstructorAuthorizedAsync(model.CourseId))
+            {
+                return Unauthorized("Unauthorized access.");
+            }
+
             if (!ModelState.IsValid)
             {
-                // Re-fetch available majors if model state is invalid
-                model.AvailableMajors = await _context.Majors
+                model.AvailableMajors = await context.Majors
+                    .Where(m => m.Department.Courses.Any(c => c.CourseId == model.CourseId))
                     .Select(m => new SelectListItem
                     {
                         Value = m.MajorId.ToString(),
                         Text = m.Name
                     }).ToListAsync();
+
+                model.AvailableLevels = await context.Levels
+                    .Select(l => new SelectListItem
+                    {
+                        Value = l.LevelId.ToString(),
+                        Text = l.Type.ToString()
+                    }).ToListAsync();
+
                 return View(model);
             }
 
-            var existingCourse = await _context.Courses
-                .FirstOrDefaultAsync(c => c.CourseId == model.CourseId && c.InstructorId == GetCurrentUserId());
+            var existingCourse = await context.Courses
+                .FirstOrDefaultAsync(c => c.CourseId == model.CourseId);
 
             if (existingCourse == null)
             {
-                return Unauthorized("Unauthorized access or course not found.");
+                return NotFound("Course not found.");
             }
 
             existingCourse.Title = model.Title;
@@ -175,12 +227,13 @@ namespace DinarkTaskOne.Controllers
             existingCourse.MaxCapacity = model.MaxCapacity;
             existingCourse.CourseEndTime = model.CourseEndTime;
             existingCourse.UpdatedAt = DateTime.UtcNow;
-            existingCourse.AllowedMajors = model.SelectedMajors != null && model.SelectedMajors.Any()
+            existingCourse.AllowedMajors = model.SelectedMajors != null && model.SelectedMajors.Count != 0
                 ? string.Join(",", model.SelectedMajors)
                 : string.Empty;
+            existingCourse.LevelId = model.SelectedLevelId;
 
-            _context.Courses.Update(existingCourse);
-            await _context.SaveChangesAsync();
+            context.Courses.Update(existingCourse);
+            await context.SaveChangesAsync();
 
             return RedirectToAction("CourseConfig", new { id = existingCourse.CourseId });
         }
@@ -189,23 +242,43 @@ namespace DinarkTaskOne.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteCourse(int id)
         {
-            var course = await _context.Courses
-                .Include(c => c.Enrollments) // Include related enrollments
-                .FirstOrDefaultAsync(c => c.CourseId == id && c.InstructorId == GetCurrentUserId());
+            if (!await IsInstructorAuthorizedAsync(id))
+            {
+                return Unauthorized("Unauthorized access.");
+            }
+
+            var course = await context.Courses
+                .Include(c => c.Enrollments)
+                .Include(c => c.Quizzes)
+                .Include(c => c.Materials)
+                .Include(c => c.Announcements)
+                .FirstOrDefaultAsync(c => c.CourseId == id);
 
             if (course == null)
             {
-                return NotFound("Course not found or unauthorized access.");
+                return NotFound("Course not found.");
             }
 
-            // Remove related enrollments first
-            if (course.Enrollments.Any())
+            // Remove related entities first
+            if (course.Enrollments.Count != 0)
             {
-                _context.Enrollments.RemoveRange(course.Enrollments);
+                context.Enrollments.RemoveRange(course.Enrollments);
+            }
+            if (course.Quizzes.Count != 0)
+            {
+                context.Quizzes.RemoveRange(course.Quizzes);
+            }
+            if (course.Materials.Count != 0)
+            {
+                context.Materials.RemoveRange(course.Materials);
+            }
+            if (course.Announcements.Count != 0)
+            {
+                context.Announcements.RemoveRange(course.Announcements);
             }
 
-            _context.Courses.Remove(course);
-            await _context.SaveChangesAsync();
+            context.Courses.Remove(course);
+            await context.SaveChangesAsync();
 
             return RedirectToAction("CoursesDashboard");
         }
@@ -214,14 +287,19 @@ namespace DinarkTaskOne.Controllers
         [HttpGet]
         public async Task<IActionResult> ViewStudents(int id)
         {
-            var course = await _context.Courses
+            if (!await IsInstructorAuthorizedAsync(id))
+            {
+                return Unauthorized("Unauthorized access.");
+            }
+
+            var course = await context.Courses
                 .Include(c => c.Enrollments)
                 .ThenInclude(e => e.Student)
-                .FirstOrDefaultAsync(c => c.CourseId == id && c.InstructorId == GetCurrentUserId());
+                .FirstOrDefaultAsync(c => c.CourseId == id);
 
             if (course == null)
             {
-                return NotFound("Course not found or unauthorized access.");
+                return NotFound("Course not found.");
             }
 
             return View(course.Enrollments);
@@ -232,20 +310,26 @@ namespace DinarkTaskOne.Controllers
         public async Task<IActionResult> CoursesDashboard()
         {
             var userId = GetCurrentUserId();
-            var courses = await _context.Courses
+            var courses = await context.Courses
                 .Where(c => c.InstructorId == userId)
                 .ToListAsync();
-
             return View(courses);
         }
 
         // 6. Course Configuration - GET
         public IActionResult CourseConfig(int id)
         {
-            var course = _context.Courses
+            if (!IsInstructorAuthorizedAsync(id).Result)
+            {
+                return Unauthorized("Unauthorized access.");
+            }
+
+            var course = context.Courses
                 .Include(c => c.Materials)
                 .Include(c => c.Announcements)
                 .Include(c => c.Quizzes)
+                .Include(c => c.Enrollments)
+                .Include(c => c.Instructor)
                 .FirstOrDefault(c => c.CourseId == id);
 
             if (course == null)
@@ -253,7 +337,6 @@ namespace DinarkTaskOne.Controllers
                 return NotFound("Course not found.");
             }
 
-            // Create a new CourseViewModel instance
             var courseViewModel = new CourseViewModel
             {
                 CourseId = course.CourseId,
@@ -261,39 +344,164 @@ namespace DinarkTaskOne.Controllers
                 Description = course.Description,
                 MaxCapacity = course.MaxCapacity,
                 CourseEndTime = course.CourseEndTime,
-                SortedContent = new List<CourseContentViewModel>()
+                Status = course.Status,  // Assign the Status property here
+                Enrollments = course.Enrollments.ToList(),
+                SortedContent = [.. course.Materials
+                    .Select(m => new CourseContentViewModel { Type = "Material", Material = m, CreatedAt = m.CreatedAt })
+                    .Union(course.Announcements.Select(a => new CourseContentViewModel { Type = "Announcement", Announcement = a, CreatedAt = a.CreatedAt }))
+                    .Union(course.Quizzes.Select(q => new CourseContentViewModel { Type = "Quiz", Quiz = q, CreatedAt = q.CreatedAt }))
+                    .OrderByDescending(c => c.CreatedAt)]
             };
 
-            // Add materials to the view model
-            courseViewModel.SortedContent.AddRange(course.Materials.Select(m => new CourseContentViewModel
-            {
-                Type = "Material",
-                Material = m,
-                CreatedAt = m.CreatedAt
-            }));
-
-            // Add announcements to the view model
-            courseViewModel.SortedContent.AddRange(course.Announcements.Select(a => new CourseContentViewModel
-            {
-                Type = "Announcement",
-                Announcement = a,
-                CreatedAt = a.CreatedAt
-            }));
-
-            // Add quizzes to the view model
-            courseViewModel.SortedContent.AddRange(course.Quizzes.Select(q => new CourseContentViewModel
-            {
-                Type = "Quiz",
-                Quiz = q,
-                CreatedAt = q.CreatedAt
-            }));
-
-            // Sort the combined content by CreatedAt property in descending order
-            courseViewModel.SortedContent = courseViewModel.SortedContent.OrderByDescending(c => c.CreatedAt).ToList();
 
             return View(courseViewModel);
         }
 
+        // 7. End Course and Calculate Grades - POST
+        [HttpPost]
+        public async Task<IActionResult> EndCourse(int courseId)
+        {
+            if (!await IsInstructorAuthorizedAsync(courseId))
+            {
+                return Unauthorized("Unauthorized access.");
+            }
+
+            var course = await context.Courses
+                .Include(c => c.Enrollments)
+                .ThenInclude(e => e.Student)
+                .FirstOrDefaultAsync(c => c.CourseId == courseId);
+
+            if (course == null)
+            {
+                return NotFound("Course not found.");
+            }
+
+            if (course.Status == StatusType.Completed)
+            {
+                return BadRequest("Course is already completed.");
+            }
+
+            // Update course status to Completed
+            course.Status = StatusType.Completed;
+
+            // Calculate final grades for all enrolled students
+            foreach (var enrollment in course.Enrollments)
+            {
+                var finalGrade = await CalculateCourseGradeAsync(enrollment.StudentId, course.CourseId);
+                await CalculateOverallGradeAsync(enrollment.StudentId, course.LevelId);
+            }
+
+            // Save the changes to the course
+            context.Courses.Update(course);
+            await context.SaveChangesAsync();
+
+            return RedirectToAction("CourseDetails", new { id = course.CourseId });
+        }
+
+        // Calculate grade for a specific course and update the student's progress
+        private async Task<CourseGradeModel> CalculateCourseGradeAsync(int studentId, int courseId)
+        {
+            var course = await context.Courses
+                .Include(c => c.Quizzes)
+                .ThenInclude(q => q.Questions)
+                .FirstOrDefaultAsync(c => c.CourseId == courseId);
+
+            if (course == null)
+                return null;
+
+            var completedAttempts = await context.Attempts
+                .Where(a => a.StudentId == studentId && a.Quiz.CourseId == courseId && a.Completed)
+                .ToListAsync();
+
+            var combinedQuizScore = completedAttempts.Sum(a => a.Score ?? 0);
+
+            var maxScore = course.Quizzes
+                .SelectMany(q => q.Questions)
+                .Sum(qn => qn.Marks);
+
+            var score = maxScore > 0 ? (combinedQuizScore / (double)maxScore) * 100 : 0;
+
+            var courseGrade = await context.CourseGrades
+                .FirstOrDefaultAsync(cg => cg.StudentId == studentId && cg.CourseId == courseId);
+
+            if (courseGrade == null)
+            {
+                courseGrade = new CourseGradeModel
+                {
+                    StudentId = studentId,
+                    CourseId = courseId,
+                    Score = score,
+                    HasPassed = score >= 50
+                };
+                context.CourseGrades.Add(courseGrade);
+            }
+            else
+            {
+                courseGrade.Score = score;
+                courseGrade.HasPassed = score >= 50;
+                context.CourseGrades.Update(courseGrade);
+            }
+
+            await context.SaveChangesAsync();
+            return courseGrade;
+        }
+
+        // Calculate overall grade for a student in a specific level
+        private async Task<StudentGradeModel> CalculateOverallGradeAsync(int studentId, int levelId)
+        {
+            var progress = await context.StudentProgresses
+                .Where(sp => sp.StudentId == studentId && sp.LevelId == levelId)
+                .ToListAsync();
+
+            if (progress.Count == 0)
+                return null;
+
+            double totalScore = progress.Sum(sp => sp.Score);
+            double averageScore = progress.Count > 0 ? totalScore / progress.Count : 0;
+
+            var studentGrade = await context.StudentGrades
+                .FirstOrDefaultAsync(sg => sg.StudentId == studentId && sg.LevelId == levelId);
+
+            if (studentGrade == null)
+            {
+                studentGrade = new StudentGradeModel
+                {
+                    StudentId = studentId,
+                    LevelId = levelId,
+                    AverageScore = averageScore,
+                    HasPassed = averageScore >= 50,
+                    OverallGrade = CalculateOverallGrade(averageScore), // Assign overall grade based on average score
+                    CalculatedAt = DateTime.UtcNow
+                };
+                context.StudentGrades.Add(studentGrade);
+            }
+            else
+            {
+                studentGrade.AverageScore = averageScore;
+                studentGrade.HasPassed = averageScore >= 50;
+                studentGrade.OverallGrade = CalculateOverallGrade(averageScore); // Update overall grade
+                studentGrade.CalculatedAt = DateTime.UtcNow;
+                context.StudentGrades.Update(studentGrade);
+            }
+
+            await context.SaveChangesAsync();
+            return studentGrade;
+        }
+
+
+        // Calculate Overall Grade based on Average Score
+        private string CalculateOverallGrade(double averageScore)
+        {
+            if (averageScore >= 90)
+                return "A";
+            if (averageScore >= 80)
+                return "B";
+            if (averageScore >= 70)
+                return "C";
+            if (averageScore >= 60)
+                return "D";
+            return "F";
+        }
 
     }
 }

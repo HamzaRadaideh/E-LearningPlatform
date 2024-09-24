@@ -1,5 +1,6 @@
 ﻿using DinarkTaskOne.Data;
 using DinarkTaskOne.Models.Authentication_Authorization;
+using DinarkTaskOne.Models.UserSpecficModels;
 using DinarkTaskOne.Models.ViewModels;
 using DinarkTaskOne.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -21,13 +22,11 @@ namespace DinarkTaskOne.Controllers
 
             return View();
         }
-
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                // Return the view with the current data if validation fails
                 ViewBag.Departments = context.Departments.ToList();
                 ViewBag.Majors = context.Majors.ToList();
                 return View(model);
@@ -42,49 +41,73 @@ namespace DinarkTaskOne.Controllers
                 return View(model);
             }
 
-            // Create a new user
-            var user = new UsersModel
-            {
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                UserName = model.UserName,
-                Email = model.Email,
-                PhoneNumber = model.PhoneNumber,
-                PasswordHash = signService.HashPassword(model.Password),
-                RoleId = model.Role == "Instructor" ? 1 : 2,  // RoleId is 1 for Instructor and 2 for Student
-                UserType = model.Role
-            };
+            UsersModel user;
 
-            // Assign DepartmentId or MajorId based on the role
             if (model.Role == "Instructor")
             {
-                if (model.DepartmentId.HasValue)
+                // Check if DepartmentId is valid
+                if (!context.Departments.Any(d => d.DepartmentId == model.DepartmentId))
                 {
-                    user.DepartmentId = model.DepartmentId;
-                    user.MajorId = null; // Clear MajorId for instructors
-                }
-                else
-                {
-                    ModelState.AddModelError("", "Please select a valid Department for Instructors.");
+                    ModelState.AddModelError("", "Invalid Department selected.");
                     ViewBag.Departments = context.Departments.ToList();
                     ViewBag.Majors = context.Majors.ToList();
                     return View(model);
                 }
+
+                // Find the maximum existing InstructorId
+                var maxInstructorId = await context.Instructors.MaxAsync(i => (int?)i.InstructorId) ?? 0;
+
+                // Create an InstructorModel
+                user = new InstructorModel
+                {
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    UserName = model.UserName,
+                    Email = model.Email,
+                    PhoneNumber = model.PhoneNumber,
+                    PasswordHash = signService.HashPassword(model.Password),
+                    RoleId = 1,  // RoleId for Instructor
+                    UserType = model.Role,
+                    DepartmentId = model.DepartmentId.Value, // Assign DepartmentId here
+                    InstructorId = maxInstructorId + 1 // Assign new incremented InstructorId
+                };
             }
             else if (model.Role == "Student")
             {
-                if (model.MajorId.HasValue)
+                // Check if MajorId is valid
+                if (!context.Majors.Any(m => m.MajorId == model.MajorId))
                 {
-                    user.MajorId = model.MajorId;
-                    user.DepartmentId = null; // Clear DepartmentId for students
-                }
-                else
-                {
-                    ModelState.AddModelError("", "Please select a valid Major for Students.");
+                    ModelState.AddModelError("", "Invalid Major selected.");
                     ViewBag.Departments = context.Departments.ToList();
                     ViewBag.Majors = context.Majors.ToList();
                     return View(model);
                 }
+
+                // Find the maximum existing StudentId
+                var maxStudentId = await context.Students.MaxAsync(s => (int?)s.StudentId) ?? 0;
+
+                // Create a StudentModel
+                user = new StudentModel
+                {
+                    FirstName = model.FirstName,
+                    LastName = model.LastName,
+                    UserName = model.UserName,
+                    Email = model.Email,
+                    PhoneNumber = model.PhoneNumber,
+                    PasswordHash = signService.HashPassword(model.Password),
+                    RoleId = 2,  // RoleId for Student
+                    UserType = model.Role,
+                    MajorId = model.MajorId.Value, // Assign MajorId here
+                    CurrentLevelId = 1, // Default level for new students
+                    StudentId = maxStudentId + 1 // Assign new incremented StudentId
+                };
+            }
+            else
+            {
+                ModelState.AddModelError("", "Invalid role selected.");
+                ViewBag.Departments = context.Departments.ToList();
+                ViewBag.Majors = context.Majors.ToList();
+                return View(model);
             }
 
             // Register the user
@@ -115,12 +138,21 @@ namespace DinarkTaskOne.Controllers
             {
                 // Create claims for UserId, UserName, and RoleId
                 var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.UserId.ToString()),  // UserId claim
+            new(ClaimTypes.Name, user.UserName),                     // UserName claim
+            new(ClaimTypes.Role, user.Role.RoleName),                // RoleName claim
+            new("RoleId", user.RoleId.ToString())                    // RoleId claim
+        };
+
+                if (user is InstructorModel instructor)
                 {
-                    new(ClaimTypes.NameIdentifier, user.UserId.ToString()),  // UserId claim
-                    new(ClaimTypes.Name, user.UserName),                     // UserName claim
-                    new(ClaimTypes.Role, user.Role.RoleName),                // RoleName claim
-                    new("RoleId", user.RoleId.ToString())                    // RoleId claim
-                };
+                    claims.Add(new Claim("InstructorId", instructor.InstructorId.ToString()));
+                }
+                else if (user is StudentModel student)
+                {
+                    claims.Add(new Claim("StudentId", student.StudentId.ToString()));
+                }
 
                 var identity = new ClaimsIdentity(claims, "CustomScheme");
                 var principal = new ClaimsPrincipal(identity);
@@ -139,6 +171,7 @@ namespace DinarkTaskOne.Controllers
             return View();
         }
 
+
         [HttpPost]
         public async Task<IActionResult> Logout(string? returnUrl = null)
         {
@@ -148,9 +181,7 @@ namespace DinarkTaskOne.Controllers
         }
 
         // Helper method to get the current user based on the stored UserId in session
-#pragma warning disable IDE0051 // Remove unused private members
         private async Task<UsersModel?> GetCurrentUserAsync()
-#pragma warning restore IDE0051 // Remove unused private members
         {
             var userIdString = HttpContext.Session.GetString("UserId");
 

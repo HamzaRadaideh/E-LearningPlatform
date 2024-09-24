@@ -10,15 +10,8 @@ using System.Security.Claims;
 namespace DinarkTaskOne.Controllers
 {
     [Authorize(Roles = "Instructor")]
-    public class UploadController : Controller
+    public class UploadController(ApplicationDbContext context) : Controller
     {
-        private readonly ApplicationDbContext _context;
-
-        public UploadController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
         private int GetCurrentUserId()
         {
             var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -45,7 +38,7 @@ namespace DinarkTaskOne.Controllers
             }
 
             var instructorId = GetCurrentUserId();
-            var course = await _context.Courses
+            var course = await context.Courses
                 .Where(c => c.CourseId == courseId && c.InstructorId == instructorId)
                 .FirstOrDefaultAsync();
 
@@ -88,8 +81,8 @@ namespace DinarkTaskOne.Controllers
                 Description = description
             };
 
-            _context.Materials.Add(material);
-            await _context.SaveChangesAsync();
+            context.Materials.Add(material);
+            await context.SaveChangesAsync();
 
             return RedirectToAction("CourseConfig", "Course", new { id = courseId });
         }
@@ -98,7 +91,7 @@ namespace DinarkTaskOne.Controllers
         [HttpGet]
         public async Task<IActionResult> EditMaterial(int id)
         {
-            var material = await _context.Materials
+            var material = await context.Materials
                 .Include(m => m.Course)
                 .Where(m => m.MaterialId == id && m.Course.InstructorId == GetCurrentUserId())
                 .FirstOrDefaultAsync();
@@ -115,7 +108,7 @@ namespace DinarkTaskOne.Controllers
         [HttpPost]
         public async Task<IActionResult> EditMaterial(MaterialsModel material)
         {
-            var existingMaterial = await _context.Materials
+            var existingMaterial = await context.Materials
                 .Include(m => m.Course)
                 .Where(m => m.MaterialId == material.MaterialId && m.Course.InstructorId == GetCurrentUserId())
                 .FirstOrDefaultAsync();
@@ -129,8 +122,8 @@ namespace DinarkTaskOne.Controllers
             existingMaterial.Description = material.Description;
             existingMaterial.UpdatedAt = DateTime.UtcNow;
 
-            _context.Materials.Update(existingMaterial);
-            await _context.SaveChangesAsync();
+            context.Materials.Update(existingMaterial);
+            await context.SaveChangesAsync();
 
             return RedirectToAction("CourseConfig", "Course", new { id = existingMaterial.CourseId });
         }
@@ -139,7 +132,7 @@ namespace DinarkTaskOne.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteMaterial(int id)
         {
-            var material = await _context.Materials
+            var material = await context.Materials
                 .Include(m => m.Course)
                 .Where(m => m.MaterialId == id && m.Course.InstructorId == GetCurrentUserId())
                 .FirstOrDefaultAsync();
@@ -149,8 +142,8 @@ namespace DinarkTaskOne.Controllers
                 return NotFound("Material not found or unauthorized access.");
             }
 
-            _context.Materials.Remove(material);
-            await _context.SaveChangesAsync();
+            context.Materials.Remove(material);
+            await context.SaveChangesAsync();
 
             return RedirectToAction("CourseConfig", "Course", new { id = material.CourseId });
         }

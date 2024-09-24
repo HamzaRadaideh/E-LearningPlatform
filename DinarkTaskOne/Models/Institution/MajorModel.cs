@@ -21,9 +21,9 @@ namespace DinarkTaskOne.Models.Institution
         // public ICollection<CourseMajor> CourseMajors { get; set; } = new List<CourseMajor>();
 
         // Relationship with Students
-        public ICollection<StudentModel> Students { get; set; } = new List<StudentModel>();
+        public ICollection<StudentModel> Students { get; set; } = [];
 
         // Optional: Add a helper property if needed to access related courses based on the AllowedMajors in the CourseModel
-        public ICollection<CourseModel> RelatedCourses { get; set; } = new List<CourseModel>();
+        public ICollection<CourseModel> RelatedCourses { get; set; } = [];
     }
 }

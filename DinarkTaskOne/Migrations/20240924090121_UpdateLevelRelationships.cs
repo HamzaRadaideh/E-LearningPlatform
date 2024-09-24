@@ -5,7 +5,7 @@
 namespace DinarkTaskOne.Migrations
 {
     /// <inheritdoc />
-    public partial class Init2 : Migration
+    public partial class UpdateLevelRelationships : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -1,13 +1,74 @@
 ﻿@model DinarkTaskOne.Models.ViewModels.CourseViewModel
 
 <div class="container mt-5">
-    <!-- Course Title, Description, and Total Quiz Score -->
+    <!-- Course Title, Description, Status, and Total Quiz Score -->
     <div class="row align-items-center mb-4">
         <div class="col-md-12 text-center">
             <h2 class="fw-bold text-primary">Course: @Model.Title</h2>
             <p class="text-muted">@Model.Description</p>
             <p><strong>Total Quiz Score:</strong> @Model.CombinedQuizScore / @Model.MaxPossibleScore</p>
             <p><strong>Progress:</strong> @Model.PercentageScore%</p> <!-- Display progress as percentage -->
+            <p>
+                <strong>Status:</strong>
+                @switch (Model.Status)
+                {
+                    case DinarkTaskOne.Models.ManageCourse.StatusType.Active:
+                        <span class="badge bg-success">Active</span>
+                        break;
+                    case DinarkTaskOne.Models.ManageCourse.StatusType.Completed:
+                        <span class="badge bg-primary">Completed</span>
+                        break;
+                    case DinarkTaskOne.Models.ManageCourse.StatusType.Cancelled:
+                        <span class="badge bg-danger">Cancelled</span>
+                        break;
+                    case DinarkTaskOne.Models.ManageCourse.StatusType.Soon:
+                        <span class="badge bg-warning">Coming Soon</span>
+                        break;
+                    case DinarkTaskOne.Models.ManageCourse.StatusType.unavailable:
+                        <span class="badge bg-secondary">Unavailable</span>
+                        break;
+                }
+            </p>
+            @if (Model.Status == DinarkTaskOne.Models.ManageCourse.StatusType.Completed)
+            {
+                <p>
+                    <strong>Final Grade:</strong>
+                    @if (Model.StudentGrade.HasValue)
+                    {
+                        <span>@Model.StudentGrade</span>
+                        @switch (Model.OverallGrade)
+                        {
+                            case "A":
+                                <span class="badge bg-success">A</span>
+                                break;
+                            case "B":
+                                <span class="badge bg-info">B</span>
+                                break;
+                            case "C":
+                                <span class="badge bg-warning">C</span>
+                                break;
+                            case "D":
+                                <span class="badge bg-danger">D</span>
+                                break;
+                            case "F":
+                                <span class="badge bg-dark">F</span>
+                                break;
+                        }
+                        @if (Model.HasPassed)
+                        {
+                            <span class="text-success">Passed</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">Failed</span>
+                        }
+                    }
+                    else
+                    {
+                        <span>Grade not available</span>
+                    }
+                </p>
+            }
         </div>
     </div>
 

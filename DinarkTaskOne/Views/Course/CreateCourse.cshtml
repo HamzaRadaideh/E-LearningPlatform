@@ -53,6 +53,18 @@
             <span asp-validation-for="SelectedMajors" class="text-danger"></span>
         </div>
 
+        <div class="mb-3">
+            <label for="SelectedLevelId" class="form-label fw-bold">Course Level</label>
+            <select class="form-control border-secondary" asp-for="SelectedLevelId">
+                <option value="">Select a level</option>
+                @foreach (var level in Model.AvailableLevels)
+                {
+                    <option value="@level.Value">@level.Text</option>
+                }
+            </select>
+            <span asp-validation-for="SelectedLevelId" class="text-danger"></span>
+        </div>
+
         <button type="submit" class="btn btn-primary w-100 py-2">Create Course</button>
     </form>
 </div>

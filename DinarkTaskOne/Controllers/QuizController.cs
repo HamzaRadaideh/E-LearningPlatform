@@ -1,12 +1,16 @@
-﻿using DinarkTaskOne.Data;
+﻿using DinarkTaskOne.Attributes;
+using DinarkTaskOne.Data;
 using DinarkTaskOne.Models.MakeQuiz;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using DinarkTaskOne.Models.ManageCourse;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DinarkTaskOne.Controllers
 {
+    //[Authorize(Roles = "Instructor")]
     public class QuizController(ApplicationDbContext context) : Controller
     {
         private readonly ApplicationDbContext context = context;
