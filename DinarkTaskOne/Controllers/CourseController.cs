@@ -264,28 +264,28 @@ namespace DinarkTaskOne.Controllers
             }
 
             // Remove related CourseGrades
-            if (course.CourseGrades.Any())
+            if (course.CourseGrades.Count != 0)
             {
                 context.CourseGrades.RemoveRange(course.CourseGrades);
             }
 
             // Remove related Enrollments
-            if (course.Enrollments.Any())
+            if (course.Enrollments.Count != 0)
             {
                 context.Enrollments.RemoveRange(course.Enrollments);
             }
 
             // Remove related Quizzes along with their Questions and Attempts
-            if (course.Quizzes.Any())
+            if (course.Quizzes.Count != 0)
             {
                 foreach (var quiz in course.Quizzes)
                 {
-                    if (quiz.Questions.Any())
+                    if (quiz.Questions.Count != 0)
                     {
                         context.Questions.RemoveRange(quiz.Questions);
                     }
 
-                    if (quiz.Attempts.Any())
+                    if (quiz.Attempts.Count != 0)
                     {
                         context.Attempts.RemoveRange(quiz.Attempts);
                     }
@@ -295,13 +295,13 @@ namespace DinarkTaskOne.Controllers
             }
 
             // Remove related Materials
-            if (course.Materials.Any())
+            if (course.Materials.Count != 0)
             {
                 context.Materials.RemoveRange(course.Materials);
             }
 
             // Remove related Announcements
-            if (course.Announcements.Any())
+            if (course.Announcements.Count != 0)
             {
                 context.Announcements.RemoveRange(course.Announcements);
             }
@@ -381,16 +381,15 @@ namespace DinarkTaskOne.Controllers
                 MaxCapacity = course.MaxCapacity,
                 CourseEndTime = course.CourseEndTime,
                 Status = course.Status,
-                Enrollments = course.Enrollments.ToList(),
+                Enrollments = [.. course.Enrollments],
                 RemainingMarks = remainingMarks, // Assign the calculated remaining marks
                 CourseCompletionPercentage = CalculateCourseCompletionPercentage(course),
                 QuizCompletionPercentage = CalculateQuizCompletionPercentage(course),
-                SortedContent = course.Materials
+                SortedContent = [.. course.Materials
                     .Select(m => new CourseContentViewModel { Type = "Material", Material = m, CreatedAt = m.CreatedAt })
                     .Union(course.Announcements.Select(a => new CourseContentViewModel { Type = "Announcement", Announcement = a, CreatedAt = a.CreatedAt }))
                     .Union(course.Quizzes.Select(q => new CourseContentViewModel { Type = "Quiz", Quiz = q, CreatedAt = q.CreatedAt }))
-                    .OrderByDescending(c => c.CreatedAt)
-                    .ToList()
+                    .OrderByDescending(c => c.CreatedAt)]
             };
 
             return View(courseViewModel);
@@ -436,7 +435,7 @@ namespace DinarkTaskOne.Controllers
             context.Courses.Update(course);
             await context.SaveChangesAsync();
 
-            return RedirectToAction("CourseDetails", new { id = course.CourseId });
+            return RedirectToAction("CourseConfig", new { id = course.CourseId });
         }
 
         // Calculate grade for a specific course and update the student's progress
@@ -544,7 +543,7 @@ namespace DinarkTaskOne.Controllers
         }
 
         // Calculate the remaining marks for the course
-        private double CalculateRemainingMarks(CourseModel course)
+        private static double CalculateRemainingMarks(CourseModel course)
         {
             const double maxTotalMarks = 100;
 
@@ -563,7 +562,7 @@ namespace DinarkTaskOne.Controllers
 
 
         //Calculate the course completion percentage based on content and quiz completion
-        private double CalculateCourseCompletionPercentage(CourseModel course)
+        private static double CalculateCourseCompletionPercentage(CourseModel course)
         {
             var materialsCount = course.Materials.Count;
             var announcementsCount = course.Announcements.Count;
@@ -572,20 +571,19 @@ namespace DinarkTaskOne.Controllers
             var totalItems = materialsCount + announcementsCount + quizzesCount;
             if (totalItems == 0) return 0;
 
-            var completedItems = materialsCount + announcementsCount + course.Quizzes.Count(q => q.Questions.Any());
+            var completedItems = materialsCount + announcementsCount + course.Quizzes.Count(q => q.Questions.Count != 0);
             return (completedItems / (double)totalItems) * 100;
         }
 
         //Calculate the quiz completion percentage based on the number of completed quizzes
-        private double CalculateQuizCompletionPercentage(CourseModel course)
+        private static double CalculateQuizCompletionPercentage(CourseModel course)
         {
             var totalQuizzes = course.Quizzes.Count;
             if (totalQuizzes == 0) return 0;
 
-            var completedQuizzes = course.Quizzes.Count(q => q.Questions.Any());
+            var completedQuizzes = course.Quizzes.Count(q => q.Questions.Count != 0);
             return (completedQuizzes / (double)totalQuizzes) * 100;
         }
-
 
         [HttpPost]
         public async Task<IActionResult> DistributeBonusMarks(int courseId, double bonusMarks)

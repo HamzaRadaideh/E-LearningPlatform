@@ -22,6 +22,7 @@ namespace DinarkTaskOne.Controllers
 
             return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
@@ -29,6 +30,13 @@ namespace DinarkTaskOne.Controllers
             {
                 ViewBag.Departments = context.Departments.ToList();
                 ViewBag.Majors = context.Majors.ToList();
+
+                // Handle AJAX request
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return PartialView("_RegisterFormPartial", model);
+                }
+
                 return View(model);
             }
 
@@ -38,6 +46,12 @@ namespace DinarkTaskOne.Controllers
                 ModelState.AddModelError("", "Passwords do not match.");
                 ViewBag.Departments = context.Departments.ToList();
                 ViewBag.Majors = context.Majors.ToList();
+
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return PartialView("_RegisterFormPartial", model);
+                }
+
                 return View(model);
             }
 
@@ -45,19 +59,20 @@ namespace DinarkTaskOne.Controllers
 
             if (model.Role == "Instructor")
             {
-                // Check if DepartmentId is valid
                 if (!context.Departments.Any(d => d.DepartmentId == model.DepartmentId))
                 {
                     ModelState.AddModelError("", "Invalid Department selected.");
                     ViewBag.Departments = context.Departments.ToList();
                     ViewBag.Majors = context.Majors.ToList();
+
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return PartialView("_RegisterFormPartial", model);
+                    }
+
                     return View(model);
                 }
 
-                // Find the maximum existing InstructorId
-                //var maxInstructorId = await context.Instructors.MaxAsync(i => (int?)i.InstructorId) ?? 0;
-
-                // Create an InstructorModel
                 user = new InstructorModel
                 {
                     FirstName = model.FirstName,
@@ -68,25 +83,25 @@ namespace DinarkTaskOne.Controllers
                     PasswordHash = signService.HashPassword(model.Password),
                     RoleId = 1,  // RoleId for Instructor
                     UserType = model.Role,
-                    DepartmentId = model.DepartmentId.Value, // Assign DepartmentId here
-                    //InstructorId = maxInstructorId + 1 // Assign new incremented InstructorId
+                    DepartmentId = model.DepartmentId.Value
                 };
             }
             else if (model.Role == "Student")
             {
-                // Check if MajorId is valid
                 if (!context.Majors.Any(m => m.MajorId == model.MajorId))
                 {
                     ModelState.AddModelError("", "Invalid Major selected.");
                     ViewBag.Departments = context.Departments.ToList();
                     ViewBag.Majors = context.Majors.ToList();
+
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return PartialView("_RegisterFormPartial", model);
+                    }
+
                     return View(model);
                 }
 
-                // Find the maximum existing StudentId
-                //var maxStudentId = await context.Students.MaxAsync(s => (int?)s.StudentId) ?? 0;
-
-                // Create a StudentModel
                 user = new StudentModel
                 {
                     FirstName = model.FirstName,
@@ -97,9 +112,8 @@ namespace DinarkTaskOne.Controllers
                     PasswordHash = signService.HashPassword(model.Password),
                     RoleId = 2,  // RoleId for Student
                     UserType = model.Role,
-                    MajorId = model.MajorId.Value, // Assign MajorId here
-                    CurrentLevelId = 1, // Default level for new students
-                    //StudentId = maxStudentId + 1 // Assign new incremented StudentId
+                    MajorId = model.MajorId.Value,
+                    CurrentLevelId = 1 // Default level for new students
                 };
             }
             else
@@ -107,13 +121,22 @@ namespace DinarkTaskOne.Controllers
                 ModelState.AddModelError("", "Invalid role selected.");
                 ViewBag.Departments = context.Departments.ToList();
                 ViewBag.Majors = context.Majors.ToList();
+
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return PartialView("_RegisterFormPartial", model);
+                }
+
                 return View(model);
             }
 
-            // Register the user
             await signService.RegisterUserAsync(user, model.Password);
 
-            // Redirect to login after successful registration
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = true });
+            }
+
             return RedirectToAction("Login");
         }
 

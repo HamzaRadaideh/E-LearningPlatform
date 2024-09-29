@@ -29,8 +29,18 @@
 
         <div class="mb-3">
             <label for="CourseEndTime" class="form-label fw-bold">Course End Time</label>
-            <input type="datetime-local" class="form-control border-secondary" id="CourseEndTime" asp-for="CourseEndTime" required>
+            <input type="datetime-local"
+                   class="form-control border-secondary"
+                   id="CourseEndTime"
+                   asp-for="CourseEndTime"
+                   required
+                   placeholder="YYYY-MM-DD HH:MM">
             <span asp-validation-for="CourseEndTime" class="text-danger"></span>
+
+@*             <!-- Custom validation message for clarity -->
+            <small class="form-text text-muted">
+                Please select a valid date and time for the course end.
+            </small> *@
         </div>
 
         <div class="mb-3">
@@ -40,13 +50,16 @@
                 {
                     @foreach (var major in Model.AvailableMajors)
                     {
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="SelectedMajors" value="@major.Value" id="major-@major.Value"
-                            @(Model.SelectedMajors.Contains(int.Parse(major.Value)) ? "checked" : "")>
-                            <label class="form-check-label" for="major-@major.Value">
-                                @major.Text
-                            </label>
-                        </div>
+                        if (int.Parse(major.Value) > 0)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="SelectedMajors" value="@major.Value" id="major-@major.Value"
+                                @(Model.SelectedMajors.Contains(int.Parse(major.Value)) ? "checked" : "")>
+                                <label class="form-check-label" for="major-@major.Value">
+                                    @major.Text
+                                </label>
+                            </div>                        
+                        } 
                     }
                 }
             </div>
@@ -56,10 +69,16 @@
         <div class="mb-3">
             <label for="SelectedLevelId" class="form-label fw-bold">Course Level</label>
             <select class="form-control border-secondary" asp-for="SelectedLevelId">
-                <option value="">Select a level</option>
-                @foreach (var level in Model.AvailableLevels)
+                @if (Model.AvailableLevels != null)
                 {
-                    <option value="@level.Value">@level.Text</option>
+                    @foreach (var level in Model.AvailableLevels)
+                    {
+                        // Check if the level's value is greater than 0 to exclude LevelZero
+                        if (int.Parse(level.Value) > 0)
+                        {
+                            <option value="@level.Value">@level.Text</option>
+                        }
+                    }
                 }
             </select>
             <span asp-validation-for="SelectedLevelId" class="text-danger"></span>
@@ -68,3 +87,33 @@
         <button type="submit" class="btn btn-primary w-100 py-2">Create Course</button>
     </form>
 </div>
+
+<!-- jQuery date-time picker functionality should be initialized here -->
+<script>
+    $(document).ready(function () {
+        // Initialize date-time picker
+        $('#CourseEndTime').datepicker({
+            dateFormat: 'yy-mm-dd', // Set your desired date format
+            onSelect: function (dateText) {
+                var time = $(this).timepicker('getTime'); // Get time if using a time picker
+                $(this).val(dateText + ' ' + time); // Combine date and time
+            }
+        }).timepicker({
+            timeFormat: 'HH:mm', // Set your desired time format
+        });
+
+        // Real-time validation for course end time
+        $('#CourseEndTime').on('change', function () {
+            var selectedDateTime = new Date($(this).val());
+            var now = new Date();
+
+            if (selectedDateTime < now) {
+                $(this).addClass('is-invalid');
+                $(this).next('.text-danger').text('Please select a future date and time.');
+            } else {
+                $(this).removeClass('is-invalid');
+                $(this).next('.text-danger').text('');
+            }
+        });
+    });
+</script>

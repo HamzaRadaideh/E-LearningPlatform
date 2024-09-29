@@ -1,0 +1,90 @@
+﻿@model DinarkTaskOne.Models.ViewModels.RegisterViewModel
+
+<form asp-action="Register" method="post" id="registerForm">
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="FirstName" class="form-label fw-bold">First Name</label>
+            <input asp-for="FirstName" class="form-control border-secondary" placeholder="Enter your first name" />
+            <span asp-validation-for="FirstName" class="text-danger"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="LastName" class="form-label fw-bold">Last Name</label>
+            <input asp-for="LastName" class="form-control border-secondary" placeholder="Enter your last name" />
+            <span asp-validation-for="LastName" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="UserName" class="form-label fw-bold">Username</label>
+        <input asp-for="UserName" class="form-control border-secondary" placeholder="Choose a username" />
+        <span asp-validation-for="UserName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label fw-bold">Email</label>
+        <input asp-for="Email" class="form-control border-secondary" placeholder="Enter your email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PhoneNumber" class="form-label fw-bold">Phone Number</label>
+        <input asp-for="PhoneNumber" class="form-control border-secondary" placeholder="Enter your phone number" />
+        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label for="Role" class="form-label fw-bold">Role</label>
+        <select asp-for="Role" class="form-control border-secondary" required>
+            <option value="Student">Student</option>
+            <option value="Instructor">Instructor</option>
+        </select>
+    </div>
+
+    <div class="mb-3" id="departmentField" style="display: none;">
+        <!-- Start hidden -->
+        <label asp-for="DepartmentId" class="form-label fw-bold">Department</label>
+        <select asp-for="DepartmentId" class="form-control border-secondary">
+            <option value="">Select Department</option>
+            @foreach (var department in ViewBag.Departments)
+            {
+                if (department.DepartmentId > 0) // Filter to exclude "Not in a Department"
+                {
+                    <option value="@department.DepartmentId">@department.Name</option>
+                }
+            }
+        </select>
+        <span asp-validation-for="DepartmentId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3" id="majorField" style="display: none;">
+        <!-- Start hidden -->
+        <label asp-for="MajorId" class="form-label fw-bold">Major</label>
+        <select asp-for="MajorId" class="form-control border-secondary">
+            <option value="">Select Major</option>
+            @foreach (var major in ViewBag.Majors)
+            {
+                if (major.MajorId > 0) // Filter to exclude "Not in a Major"
+                {
+                    <option value="@major.MajorId">@major.Name</option>
+                }
+            }
+        </select>
+        <span asp-validation-for="MajorId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label fw-bold">Password</label>
+        <input asp-for="Password" type="password" class="form-control border-secondary" placeholder="Enter a password" required />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ConfirmPassword" class="form-label fw-bold">Confirm Password</label>
+        <input asp-for="ConfirmPassword" type="password" class="form-control border-secondary" placeholder="Confirm your password" required />
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 py-2">Register</button>
+
+</form>

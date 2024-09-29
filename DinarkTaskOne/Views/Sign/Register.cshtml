@@ -49,31 +49,35 @@
                                 <option value="Instructor">Instructor</option>
                             </select>
                         </div>
+                        <div class="row">
+                            <div class="mb-3 col-md-6" id="departmentField">
+                                <label asp-for="DepartmentId" class="form-label fw-bold">Department</label>
+                                <select asp-for="DepartmentId" class="form-control border-secondary" required>
+                                    @foreach (var department in ViewBag.Departments)
+                                    {
+                                        if (department.DepartmentId > 0) // Filter to exclude "Not in a Department"
+                                        {
+                                            <option value="@department.DepartmentId">@department.Name</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                            </div>
 
-                        <div class="mb-3" id="departmentField">
-                            <label asp-for="DepartmentId" class="form-label fw-bold">Department</label>
-                            <select asp-for="DepartmentId" class="form-control border-secondary">
-                                <option value="">Select Department</option>
-                                @foreach (var department in ViewBag.Departments)
-                                {
-                                    <option value="@department.DepartmentId">@department.Name</option>
-                                }
-                            </select>
-                            <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                            <div class="mb-3 col-md-6" id="majorField">
+                                <label asp-for="MajorId" class="form-label fw-bold">Major</label>
+                                <select asp-for="MajorId" class="form-control border-secondary" required>
+                                    @foreach (var major in ViewBag.Majors)
+                                    {
+                                        if (major.MajorId > 0) // Filter to exclude "Not in a Major"
+                                        {
+                                            <option value="@major.MajorId">@major.Name</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="MajorId" class="text-danger"></span>
+                            </div>
                         </div>
-
-                        <div class="mb-3" id="majorField">
-                            <label asp-for="MajorId" class="form-label fw-bold">Major</label>
-                            <select asp-for="MajorId" class="form-control border-secondary">
-                                <option value="">Select Major</option>
-                                @foreach (var major in ViewBag.Majors)
-                                {
-                                    <option value="@major.MajorId">@major.Name</option>
-                                }
-                            </select>
-                            <span asp-validation-for="MajorId" class="text-danger"></span>
-                        </div>
-
 
                         <div class="mb-3">
                             <label asp-for="Password" class="form-label fw-bold">Password</label>
@@ -101,26 +105,26 @@
 @section Scripts {
     <script type="text/javascript">
         $(document).ready(function () {
-            // Initially hide or show fields based on role
-            toggleFields();
+            // // Initially hide or show fields based on role
+            // toggleFields();
 
-            // On role change, toggle the visibility of department and major fields
-            $('#Role').change(function () {
-                toggleFields();
-            });
+            // // On role change, toggle the visibility of department and major fields
+            // $('#Role').change(function () {
+            //     toggleFields();
+            // });
 
-            function toggleFields() {
-                var selectedRole = $('#Role').val();
-                if (selectedRole === 'Instructor') {
-                    $('#departmentField').show();
-                    $('#majorField').hide();
-                    $('#Major').val(''); // Clear major selection
-                } else if (selectedRole === 'Student') {
-                    $('#departmentField').hide();
-                    $('#majorField').show();
-                    $('#Department').val(''); // Clear department selection
-                }
-            }
+            // function toggleFields() {
+            //     var selectedRole = $('#Role').val();
+            //     if (selectedRole === 'Instructor') {
+            //         $('#departmentField').show();
+            //         $('#majorField').hide();
+            //         $('#Major').val(''); // Clear major selection
+            //     } else if (selectedRole === 'Student') {
+            //         $('#departmentField').hide();
+            //         $('#majorField').show();
+            //         $('#Department').val(''); // Clear department selection
+            //     }
+            // }
 
             // jQuery Validation
             $("#registerForm").validate({
