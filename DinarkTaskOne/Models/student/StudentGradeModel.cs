@@ -23,8 +23,7 @@ namespace DinarkTaskOne.Models.student
 
         public bool HasPassed { get; set; } // If the student passed the level
 
-        [Required]
-        public string OverallGrade { get; set; } // Overall grade for the level
+        public string? OverallGrade { get; set; } // Overall grade for the level
 
         public DateTime CalculatedAt { get; set; } = DateTime.UtcNow; // Date of grade calculation
     }

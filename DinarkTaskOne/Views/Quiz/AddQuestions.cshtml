@@ -1,4 +1,11 @@
-﻿<form asp-action="AddQuestions" method="post" class="p-4 shadow-sm bg-white rounded">
+﻿@{
+    int remainingMarks = ViewBag.RemainingMarks ?? 100;
+}
+
+<h2>Add Questions to Quiz</h2>
+<p>Remaining marks for the course: @remainingMarks</p>
+
+<form asp-action="AddQuestions" method="post" class="p-4 shadow-sm bg-white rounded">
     <input type="hidden" name="QuizId" value="@ViewBag.QuizId" />
 
     <div class="mb-3">

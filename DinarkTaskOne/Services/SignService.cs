@@ -15,12 +15,12 @@ namespace DinarkTaskOne.Services
 
             if (user is InstructorModel instructor)
             {
-                instructor.InstructorId = 0; // Ensure it's set to 0 so it will auto-increment in the database
+                //instructor.InstructorId = 0; // Ensure it's set to 0 so it will auto-increment in the database
                 context.Instructors.Add(instructor);
             }
             else if (user is StudentModel student)
             {
-                student.StudentId = 0; // Ensure it's set to 0 so it will auto-increment in the database
+                //student.StudentId = 0; // Ensure it's set to 0 so it will auto-increment in the database
                 context.Students.Add(student);
             }
             else

@@ -26,11 +26,15 @@ namespace DinarkTaskOne.Models.MakeQuiz
         [Range(typeof(TimeSpan), "00:00:01", "23:59:59", ErrorMessage = "Duration must be between 00:00:01 and 23:59:59.")]
         public TimeSpan Duration { get; set; }
 
+        public string? Description { get; set; } // Description of the quiz
+        public string? Instructions { get; set; } // Instructions for taking the quiz
+        public int MaximumMarks { get; set; } // Max score for the quiz
+
         public virtual ICollection<QuestionModel> Questions { get; set; } = [];
 
         public virtual ICollection<AttemptModel> Attempts { get; set; } = [];
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-
     }
+
 }

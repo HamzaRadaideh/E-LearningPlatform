@@ -22,9 +22,6 @@
                     case DinarkTaskOne.Models.ManageCourse.StatusType.Soon:
                         <span class="badge bg-warning">Coming Soon</span>
                         break;
-                    case DinarkTaskOne.Models.ManageCourse.StatusType.unavailable:
-                        <span class="badge bg-secondary">Unavailable</span>
-                        break;
                 }
             </p>
             @if (Model.Status == DinarkTaskOne.Models.ManageCourse.StatusType.Active)
@@ -51,6 +48,20 @@
             </div>
         </div>
     </div>
+
+    <!-- Display Remaining Marks -->
+    @if (Model.RemainingMarks >= 0)
+    {
+        <div class="alert alert-info">
+            Remaining Marks for this Course: <strong>@Model.RemainingMarks</strong> out of 100
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger">
+            This course has exceeded the maximum allowed marks by <strong>@Math.Abs(Model.RemainingMarks)</strong>. Please adjust the quizzes accordingly.
+        </div>
+    }
 
     <hr />
 
@@ -91,6 +102,27 @@
                     <a asp-action="MakeAnnouncement" asp-controller="Announce" asp-route-courseId="@Model.CourseId" class="btn btn-outline-info">
                         <i class="bi bi-megaphone"></i> Announce
                     </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+
+    <!-- Course Analytics Section -->
+    <h4 class="text-primary mb-3">Course Analytics</h4>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="progress mb-3">
+                <div class="progress-bar bg-success" role="progressbar" style="width: @Model.CourseCompletionPercentage%" aria-valuenow="@Model.CourseCompletionPercentage" aria-valuemin="0" aria-valuemax="100">
+                    Course Completion: @Model.CourseCompletionPercentage%
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="progress mb-3">
+                <div class="progress-bar bg-info" role="progressbar" style="width: @Model.QuizCompletionPercentage%" aria-valuenow="@Model.QuizCompletionPercentage" aria-valuemin="0" aria-valuemax="100">
+                    Quiz Completion: @Model.QuizCompletionPercentage%
                 </div>
             </div>
         </div>
@@ -192,5 +224,15 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Export and Print Options -->
+    <div class="text-end my-4">
+        <a asp-action="ExportCourseDetails" asp-route-id="@Model.CourseId" class="btn btn-outline-secondary">
+            <i class="bi bi-file-earmark-arrow-down"></i> Export Details
+        </a>
+        <button class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print
+        </button>
     </div>
 </div>

@@ -1,4 +1,12 @@
-﻿<form asp-action="CreateQuiz" method="post" class="p-4 shadow-sm bg-white rounded">
+﻿@{
+    int remainingMarks = ViewBag.RemainingMarks ?? 100;
+}
+
+<h2>Create a New Quiz</h2>
+<p>Remaining marks for the course: @remainingMarks</p>
+
+
+<form asp-action="CreateQuiz" method="post" class="p-4 shadow-sm bg-white rounded">
     <input type="hidden" name="CourseId" value="@ViewBag.CourseId" />
 
     <div class="mb-3">
@@ -15,6 +23,9 @@
         <label class="form-label fw-bold">Quiz Duration</label>
         <div class="row">
             <div class="col">
+                <input type="number" class="form-control" id="Hours" name="Hours" min="0" max="23" required placeholder="Hours" />
+            </div>
+            <div class="col">
                 <input type="number" class="form-control" id="Minutes" name="Minutes" min="0" max="59" required placeholder="Minutes" />
             </div>
             <div class="col">
@@ -27,3 +38,4 @@
         <button type="submit" class="btn btn-primary">Create Quiz</button>
     </div>
 </form>
+

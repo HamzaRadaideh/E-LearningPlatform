@@ -223,7 +223,7 @@ namespace DinarkTaskOne.Controllers
                 .ToListAsync();
 
             // Check if any available courses exist
-            if (availableCourses == null || !availableCourses.Any())
+            if (availableCourses == null || availableCourses.Count == 0)
             {
                 ViewBag.Message = "No courses available for enrollment.";
             }
@@ -340,7 +340,7 @@ namespace DinarkTaskOne.Controllers
             }));
 
             // Order the content by creation date
-            sortedContent = sortedContent.OrderByDescending(c => c.CreatedAt).ToList();
+            sortedContent = [.. sortedContent.OrderByDescending(c => c.CreatedAt)];
 
             // Fetch the student's grade model
             var studentGradeModel = await context.StudentGrades

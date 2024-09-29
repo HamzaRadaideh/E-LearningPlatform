@@ -23,10 +23,14 @@ namespace DinarkTaskOne.Models.MakeQuiz
         [Range(1, 100)]
         public int Marks { get; set; }
 
+        public int DifficultyLevel { get; set; } = 1; // Difficulty level (1 = Easy, 2 = Medium, 3 = Hard)
+        public string? Tag { get; set; } // A tag for categorization (e.g., "Math", "History")
+
         public virtual ICollection<AnswerModel> Answers { get; set; } = [];
 
         public virtual ICollection<QuestionAnswerModel> QuestionAnswers { get; set; } = [];
     }
+
 
     public enum QuestionType
     {

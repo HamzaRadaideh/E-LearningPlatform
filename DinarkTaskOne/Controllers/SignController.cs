@@ -55,7 +55,7 @@ namespace DinarkTaskOne.Controllers
                 }
 
                 // Find the maximum existing InstructorId
-                var maxInstructorId = await context.Instructors.MaxAsync(i => (int?)i.InstructorId) ?? 0;
+                //var maxInstructorId = await context.Instructors.MaxAsync(i => (int?)i.InstructorId) ?? 0;
 
                 // Create an InstructorModel
                 user = new InstructorModel
@@ -69,7 +69,7 @@ namespace DinarkTaskOne.Controllers
                     RoleId = 1,  // RoleId for Instructor
                     UserType = model.Role,
                     DepartmentId = model.DepartmentId.Value, // Assign DepartmentId here
-                    InstructorId = maxInstructorId + 1 // Assign new incremented InstructorId
+                    //InstructorId = maxInstructorId + 1 // Assign new incremented InstructorId
                 };
             }
             else if (model.Role == "Student")
@@ -84,7 +84,7 @@ namespace DinarkTaskOne.Controllers
                 }
 
                 // Find the maximum existing StudentId
-                var maxStudentId = await context.Students.MaxAsync(s => (int?)s.StudentId) ?? 0;
+                //var maxStudentId = await context.Students.MaxAsync(s => (int?)s.StudentId) ?? 0;
 
                 // Create a StudentModel
                 user = new StudentModel
@@ -99,7 +99,7 @@ namespace DinarkTaskOne.Controllers
                     UserType = model.Role,
                     MajorId = model.MajorId.Value, // Assign MajorId here
                     CurrentLevelId = 1, // Default level for new students
-                    StudentId = maxStudentId + 1 // Assign new incremented StudentId
+                    //StudentId = maxStudentId + 1 // Assign new incremented StudentId
                 };
             }
             else
@@ -145,14 +145,14 @@ namespace DinarkTaskOne.Controllers
             new("RoleId", user.RoleId.ToString())                    // RoleId claim
         };
 
-                if (user is InstructorModel instructor)
-                {
-                    claims.Add(new Claim("InstructorId", instructor.InstructorId.ToString()));
-                }
-                else if (user is StudentModel student)
-                {
-                    claims.Add(new Claim("StudentId", student.StudentId.ToString()));
-                }
+                //if (user is InstructorModel instructor)
+                //{
+                //    claims.Add(new Claim("InstructorId", instructor.InstructorId.ToString()));
+                //}
+                //else if (user is StudentModel student)
+                //{
+                //    claims.Add(new Claim("StudentId", student.StudentId.ToString()));
+                //}
 
                 var identity = new ClaimsIdentity(claims, "CustomScheme");
                 var principal = new ClaimsPrincipal(identity);

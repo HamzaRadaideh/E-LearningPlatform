@@ -27,7 +27,10 @@ namespace DinarkTaskOne.Models.MakeQuiz
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
 
-        // Relation with QuestionAnswers
+        public int TotalMarks { get; set; } // Maximum marks for this attempt
+        public string? Remarks { get; set; } // Feedback or remarks for the attempt
+
         public virtual ICollection<QuestionAnswerModel> QuestionAnswers { get; set; } = [];
     }
+
 }

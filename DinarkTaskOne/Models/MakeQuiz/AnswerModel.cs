@@ -18,5 +18,9 @@ namespace DinarkTaskOne.Models.MakeQuiz
         [ForeignKey("Question")]
         public int QuestionId { get; set; }
         public virtual QuestionModel? Question { get; set; }
+
+        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+        public bool IsActive { get; set; } = true; // Soft delete or disable feature
     }
+
 }

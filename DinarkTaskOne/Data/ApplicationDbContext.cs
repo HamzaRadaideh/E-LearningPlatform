@@ -45,7 +45,7 @@ namespace DinarkTaskOne.Data
         public DbSet<StudentGradeModel> StudentGrades { get; set; } = null!;
 
         // DbSet for Course Grades
-        public DbSet<CourseGradeModel> CourseGrades { get; set; } = null!; // Add this DbSet for CourseGrades
+        public DbSet<CourseGradeModel> CourseGrades { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,14 +55,6 @@ namespace DinarkTaskOne.Data
             modelBuilder.Entity<UsersModel>()
                 .Property(u => u.UserId)
                 .ValueGeneratedOnAdd(); // Use Identity generation for UserId
-
-            modelBuilder.Entity<StudentModel>()
-                .Property(s => s.StudentId)
-                        .ValueGeneratedNever(); // Do not use Identity generation
-
-            modelBuilder.Entity<InstructorModel>()
-                .Property(i => i.InstructorId)
-                        .ValueGeneratedNever(); // Do not use Identity generation
 
             // Configure Roles
             modelBuilder.Entity<RolesModel>()
@@ -183,17 +175,17 @@ namespace DinarkTaskOne.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Course Grade Relationships
-            modelBuilder.Entity<CourseGradeModel>() // Define relationships for CourseGradeModel
+            modelBuilder.Entity<CourseGradeModel>()
                 .HasOne(cg => cg.Course)
                 .WithMany()
                 .HasForeignKey(cg => cg.CourseId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull); // Set CourseId to null instead of deleting related CourseGrades
 
             modelBuilder.Entity<CourseGradeModel>()
                 .HasOne(cg => cg.Student)
                 .WithMany()
                 .HasForeignKey(cg => cg.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade); // Keep as Cascade to delete grades related to deleted student
 
             // Seed Departments and Majors with Negative IDs
             modelBuilder.Entity<DepartmentModel>().HasData(

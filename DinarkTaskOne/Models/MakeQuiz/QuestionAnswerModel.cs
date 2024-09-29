@@ -20,5 +20,8 @@ namespace DinarkTaskOne.Models.MakeQuiz
         [ForeignKey("SelectedOption")]
         public int SelectedOptionId { get; set; }
         public virtual AnswerModel SelectedOption { get; set; } = null!;
+
+        public int ScoreAwarded { get; set; } // Score received for this question
     }
+
 }

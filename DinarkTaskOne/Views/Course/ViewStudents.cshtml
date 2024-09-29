@@ -8,17 +8,72 @@
                 <th>Student Name</th>
                 <th>Email</th>
                 <th>Phone</th>
+                <th>Average Score</th>
+                <th>Has Passed</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var enrollment in Model)
             {
+                var studentGrade = enrollment.Student.Grades.FirstOrDefault(g => g.LevelId == enrollment.Course.LevelId);
                 <tr>
                     <td>@enrollment.Student.FirstName @enrollment.Student.LastName</td>
                     <td>@enrollment.Student.Email</td>
                     <td>@enrollment.Student.PhoneNumber</td>
+                    <td>
+                        @if (studentGrade != null)
+                        {
+                            @studentGrade.AverageScore
+                        }
+                        else
+                        {
+                            <span class="text-muted">N/A</span>
+                        }
+                    </td>
+                    <td>
+                        @if (studentGrade != null && studentGrade.HasPassed)
+                        {
+                            <span class="badge bg-success">Yes</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">No</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <a asp-action="StudentDetails" asp-route-id="@enrollment.StudentId" class="btn btn-outline-info btn-sm mx-1">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                            <form asp-action="RemoveStudent" asp-route-id="@enrollment.StudentId" asp-route-courseId="@enrollment.CourseId" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger btn-sm mx-1">
+                                    <i class="bi bi-trash"></i> Remove
+                                </button>
+                            </form>
+                        </div>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
+
+    <!-- Summary Section -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="alert alert-info">
+                Total Enrolled Students: <strong>@Model.Count()</strong>
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="btn-group">
+                <a asp-action="ExportStudentList" asp-route-id="@ViewBag.CourseId" class="btn btn-outline-secondary">
+                    <i class="bi bi-file-earmark-arrow-down"></i> Export List
+                </a>
+                <button class="btn btn-outline-secondary" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

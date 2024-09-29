@@ -17,20 +17,48 @@ namespace DinarkTaskOne.Controllers
 
         // 1. Create a new quiz (Instructor only)
         [HttpGet]
-        public IActionResult CreateQuiz(int courseId)
+        public async Task<IActionResult> CreateQuiz(int courseId)
         {
+            var remainingMarks = await CalculateRemainingMarksAsync(courseId);
+
             ViewBag.CourseId = courseId;
+            ViewBag.RemainingMarks = remainingMarks;
+
             return View();
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateQuiz(QuizModel quiz, int hours, int minutes, int seconds, int numberOfQuestions)
         {
+            // Check if CourseId is valid and the course exists
+            var course = await context.Courses.FirstOrDefaultAsync(c => c.CourseId == quiz.CourseId);
+            if (course == null)
+            {
+                ModelState.AddModelError("", $"Course with ID {quiz.CourseId} does not exist.");
+                ViewBag.CourseId = quiz.CourseId;
+                return View(quiz);
+            }
+
+            // Initialize the quiz's Questions property to prevent null references
+            quiz.Questions ??= [];
+
+            // Calculate remaining marks for the course
+            var remainingMarks = await CalculateRemainingMarksAsync(quiz.CourseId);
+
+            // Check if the new quiz would exceed the remaining marks
+            if (quiz.Questions.Sum(q => q.Marks) > remainingMarks)
+            {
+                ModelState.AddModelError("", $"Total marks for this quiz exceed the remaining marks of {remainingMarks} for the course.");
+                ViewBag.CourseId = quiz.CourseId;
+                ViewBag.RemainingMarks = remainingMarks; // Re-populate remaining marks
+                return View(quiz);
+            }
+
             // Combine the time inputs into a TimeSpan
             quiz.Duration = new TimeSpan(hours, minutes, seconds);
             quiz.NumberOfQuestions = numberOfQuestions;
 
-            // Add the quiz to the database
+            // Save the quiz to the database
             context.Quizzes.Add(quiz);
             await context.SaveChangesAsync();
 
@@ -41,6 +69,7 @@ namespace DinarkTaskOne.Controllers
             // Redirect to AddQuestions to start adding questions to the quiz
             return RedirectToAction("AddQuestions", new { quizId = quiz.QuizId });
         }
+
 
         // 2. Add questions to the quiz, allowing the instructor to specify the type of question
         [HttpGet]
@@ -66,11 +95,6 @@ namespace DinarkTaskOne.Controllers
         [HttpPost]
         public async Task<IActionResult> AddQuestions(QuestionModel questionModel, string questionType)
         {
-            //if (!ModelState.IsValid)
-            //{
-            //    return BadRequest("Invalid question type.");
-            //}
-            // Convert string to enum type
             if (Enum.TryParse<QuestionType>(questionType, out var parsedQuestionType))
             {
                 questionModel.Type = parsedQuestionType;
@@ -252,6 +276,22 @@ namespace DinarkTaskOne.Controllers
             return View(quiz);
         }
 
+
+        public async Task<int> CalculateRemainingMarksAsync(int courseId)
+        {
+            var course = await context.Courses
+                .Include(c => c.Quizzes)
+                .ThenInclude(q => q.Questions)
+                .FirstOrDefaultAsync(c => c.CourseId == courseId);
+
+            if (course == null) return 100; // If course not found, return full marks
+
+            int totalMarks = course.Quizzes
+                .SelectMany(q => q.Questions)
+                .Sum(q => q.Marks);
+
+            return 100 - totalMarks; // Return the remaining marks
+        }
 
     }
 }

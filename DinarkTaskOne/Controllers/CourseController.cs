@@ -2,20 +2,19 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using DinarkTaskOne.Data;
 using DinarkTaskOne.Models.ManageCourse;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using DinarkTaskOne.Models.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using DinarkTaskOne.Models.student;
-using System.Linq;
-using System.Threading.Tasks;
-using System;
 
 namespace DinarkTaskOne.Controllers
 {
     [Authorize(Roles = "Instructor")]
     public class CourseController(ApplicationDbContext context) : Controller
     {
+        private readonly ApplicationDbContext context = context;
 
         // Helper method to get the current user's ID
         private int GetCurrentUserId()
@@ -124,7 +123,7 @@ namespace DinarkTaskOne.Controllers
                 DepartmentId = instructorDetails.DepartmentId,
                 InstructorId = GetCurrentUserId(),
                 AllowedMajors = allowedMajors,
-                LevelId = model.SelectedLevelId, // Save the selected level ID
+                LevelId = model.SelectedLevelId,
                 Status = StatusType.Active
             };
 
@@ -247,11 +246,16 @@ namespace DinarkTaskOne.Controllers
                 return Unauthorized("Unauthorized access.");
             }
 
+            // Retrieve the course and include all related entities
             var course = await context.Courses
                 .Include(c => c.Enrollments)
                 .Include(c => c.Quizzes)
+                    .ThenInclude(q => q.Questions)
+                .Include(c => c.Quizzes)
+                    .ThenInclude(q => q.Attempts)
                 .Include(c => c.Materials)
                 .Include(c => c.Announcements)
+                .Include(c => c.CourseGrades)
                 .FirstOrDefaultAsync(c => c.CourseId == id);
 
             if (course == null)
@@ -259,25 +263,53 @@ namespace DinarkTaskOne.Controllers
                 return NotFound("Course not found.");
             }
 
-            // Remove related entities first
-            if (course.Enrollments.Count != 0)
+            // Remove related CourseGrades
+            if (course.CourseGrades.Any())
+            {
+                context.CourseGrades.RemoveRange(course.CourseGrades);
+            }
+
+            // Remove related Enrollments
+            if (course.Enrollments.Any())
             {
                 context.Enrollments.RemoveRange(course.Enrollments);
             }
-            if (course.Quizzes.Count != 0)
+
+            // Remove related Quizzes along with their Questions and Attempts
+            if (course.Quizzes.Any())
             {
+                foreach (var quiz in course.Quizzes)
+                {
+                    if (quiz.Questions.Any())
+                    {
+                        context.Questions.RemoveRange(quiz.Questions);
+                    }
+
+                    if (quiz.Attempts.Any())
+                    {
+                        context.Attempts.RemoveRange(quiz.Attempts);
+                    }
+                }
+
                 context.Quizzes.RemoveRange(course.Quizzes);
             }
-            if (course.Materials.Count != 0)
+
+            // Remove related Materials
+            if (course.Materials.Any())
             {
                 context.Materials.RemoveRange(course.Materials);
             }
-            if (course.Announcements.Count != 0)
+
+            // Remove related Announcements
+            if (course.Announcements.Any())
             {
                 context.Announcements.RemoveRange(course.Announcements);
             }
 
+            // Finally, remove the course itself
             context.Courses.Remove(course);
+
+            // Save all changes in one go
             await context.SaveChangesAsync();
 
             return RedirectToAction("CoursesDashboard");
@@ -317,25 +349,29 @@ namespace DinarkTaskOne.Controllers
         }
 
         // 6. Course Configuration - GET
-        public IActionResult CourseConfig(int id)
+        public async Task<IActionResult> CourseConfig(int id)
         {
-            if (!IsInstructorAuthorizedAsync(id).Result)
+            if (!await IsInstructorAuthorizedAsync(id))
             {
                 return Unauthorized("Unauthorized access.");
             }
 
-            var course = context.Courses
+            var course = await context.Courses
                 .Include(c => c.Materials)
                 .Include(c => c.Announcements)
                 .Include(c => c.Quizzes)
+                .ThenInclude(q => q.Questions) // Include questions for quizzes
                 .Include(c => c.Enrollments)
                 .Include(c => c.Instructor)
-                .FirstOrDefault(c => c.CourseId == id);
+                .FirstOrDefaultAsync(c => c.CourseId == id);
 
             if (course == null)
             {
                 return NotFound("Course not found.");
             }
+
+            // Calculate remaining marks
+            var remainingMarks = CalculateRemainingMarks(course);
 
             var courseViewModel = new CourseViewModel
             {
@@ -344,18 +380,23 @@ namespace DinarkTaskOne.Controllers
                 Description = course.Description,
                 MaxCapacity = course.MaxCapacity,
                 CourseEndTime = course.CourseEndTime,
-                Status = course.Status,  // Assign the Status property here
+                Status = course.Status,
                 Enrollments = course.Enrollments.ToList(),
-                SortedContent = [.. course.Materials
+                RemainingMarks = remainingMarks, // Assign the calculated remaining marks
+                CourseCompletionPercentage = CalculateCourseCompletionPercentage(course),
+                QuizCompletionPercentage = CalculateQuizCompletionPercentage(course),
+                SortedContent = course.Materials
                     .Select(m => new CourseContentViewModel { Type = "Material", Material = m, CreatedAt = m.CreatedAt })
                     .Union(course.Announcements.Select(a => new CourseContentViewModel { Type = "Announcement", Announcement = a, CreatedAt = a.CreatedAt }))
                     .Union(course.Quizzes.Select(q => new CourseContentViewModel { Type = "Quiz", Quiz = q, CreatedAt = q.CreatedAt }))
-                    .OrderByDescending(c => c.CreatedAt)]
+                    .OrderByDescending(c => c.CreatedAt)
+                    .ToList()
             };
-
 
             return View(courseViewModel);
         }
+
+
 
         // 7. End Course and Calculate Grades - POST
         [HttpPost]
@@ -399,7 +440,7 @@ namespace DinarkTaskOne.Controllers
         }
 
         // Calculate grade for a specific course and update the student's progress
-        private async Task<CourseGradeModel> CalculateCourseGradeAsync(int studentId, int courseId)
+        private async Task<CourseGradeModel?> CalculateCourseGradeAsync(int studentId, int courseId)
         {
             var course = await context.Courses
                 .Include(c => c.Quizzes)
@@ -447,7 +488,7 @@ namespace DinarkTaskOne.Controllers
         }
 
         // Calculate overall grade for a student in a specific level
-        private async Task<StudentGradeModel> CalculateOverallGradeAsync(int studentId, int levelId)
+        private async Task<StudentGradeModel?> CalculateOverallGradeAsync(int studentId, int levelId)
         {
             var progress = await context.StudentProgresses
                 .Where(sp => sp.StudentId == studentId && sp.LevelId == levelId)
@@ -470,7 +511,7 @@ namespace DinarkTaskOne.Controllers
                     LevelId = levelId,
                     AverageScore = averageScore,
                     HasPassed = averageScore >= 50,
-                    OverallGrade = CalculateOverallGrade(averageScore), // Assign overall grade based on average score
+                    OverallGrade = CalculateOverallGrade(averageScore),
                     CalculatedAt = DateTime.UtcNow
                 };
                 context.StudentGrades.Add(studentGrade);
@@ -479,7 +520,7 @@ namespace DinarkTaskOne.Controllers
             {
                 studentGrade.AverageScore = averageScore;
                 studentGrade.HasPassed = averageScore >= 50;
-                studentGrade.OverallGrade = CalculateOverallGrade(averageScore); // Update overall grade
+                studentGrade.OverallGrade = CalculateOverallGrade(averageScore);
                 studentGrade.CalculatedAt = DateTime.UtcNow;
                 context.StudentGrades.Update(studentGrade);
             }
@@ -488,9 +529,8 @@ namespace DinarkTaskOne.Controllers
             return studentGrade;
         }
 
-
         // Calculate Overall Grade based on Average Score
-        private string CalculateOverallGrade(double averageScore)
+        private static string CalculateOverallGrade(double averageScore)
         {
             if (averageScore >= 90)
                 return "A";
@@ -503,5 +543,96 @@ namespace DinarkTaskOne.Controllers
             return "F";
         }
 
+        // Calculate the remaining marks for the course
+        private double CalculateRemainingMarks(CourseModel course)
+        {
+            const double maxTotalMarks = 100;
+
+            // Calculate the total marks from all quizzes
+            var totalMarks = course.Quizzes
+                .SelectMany(q => q.Questions)
+                .Sum(q => q.Marks);
+
+            // Calculate the remaining marks
+            double remainingMarks = maxTotalMarks - totalMarks;
+            Console.WriteLine($"Total Marks: {totalMarks}, Remaining Marks: {remainingMarks}");
+
+            // Return the remaining marks, which can be negative if total marks exceed 100
+            return remainingMarks;
+        }
+
+
+        //Calculate the course completion percentage based on content and quiz completion
+        private double CalculateCourseCompletionPercentage(CourseModel course)
+        {
+            var materialsCount = course.Materials.Count;
+            var announcementsCount = course.Announcements.Count;
+            var quizzesCount = course.Quizzes.Count;
+
+            var totalItems = materialsCount + announcementsCount + quizzesCount;
+            if (totalItems == 0) return 0;
+
+            var completedItems = materialsCount + announcementsCount + course.Quizzes.Count(q => q.Questions.Any());
+            return (completedItems / (double)totalItems) * 100;
+        }
+
+        //Calculate the quiz completion percentage based on the number of completed quizzes
+        private double CalculateQuizCompletionPercentage(CourseModel course)
+        {
+            var totalQuizzes = course.Quizzes.Count;
+            if (totalQuizzes == 0) return 0;
+
+            var completedQuizzes = course.Quizzes.Count(q => q.Questions.Any());
+            return (completedQuizzes / (double)totalQuizzes) * 100;
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> DistributeBonusMarks(int courseId, double bonusMarks)
+        {
+            Console.WriteLine($"DistributeBonusMarks called with courseId: {courseId}, bonusMarks: {bonusMarks}");
+
+            if (!await IsInstructorAuthorizedAsync(courseId))
+            {
+                return Unauthorized("Unauthorized access.");
+            }
+
+            var course = await context.Courses
+                .Include(c => c.Enrollments)
+                .ThenInclude(e => e.Student)
+                .FirstOrDefaultAsync(c => c.CourseId == courseId);
+
+            if (course == null)
+            {
+                return NotFound("Course not found.");
+            }
+
+            var remainingMarks = CalculateRemainingMarks(course);
+
+            if (bonusMarks <= 0 || bonusMarks > remainingMarks)
+            {
+                return BadRequest("Invalid bonus marks amount.");
+            }
+
+            foreach (var enrollment in course.Enrollments)
+            {
+                // Check if student progress already exists
+                var studentProgress = await context.StudentProgresses
+                    .FirstOrDefaultAsync(sp => sp.StudentId == enrollment.StudentId && sp.LevelId == course.LevelId);
+
+                if (studentProgress != null)
+                {
+                    studentProgress.Score += bonusMarks;
+                    context.StudentProgresses.Update(studentProgress);
+                }
+            }
+
+            // Update remaining marks in the course model
+            course.RemainingMarks = remainingMarks - bonusMarks; // Decrease the remaining marks
+            context.Courses.Update(course); // Update the course model
+
+            await context.SaveChangesAsync();
+            return RedirectToAction("CourseConfig", new { id = courseId });
+        }
     }
 }

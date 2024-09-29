@@ -11,9 +11,9 @@ namespace DinarkTaskOne.Models.UserSpecficModels
 {
     public class StudentModel : UsersModel
     {
-        // Unique Student Identifier (Support Key)
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int StudentId { get; set; } = 0; // Unique student identifier, not a primary key
+        //// Unique Student Identifier (Support Key)
+        //[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        //public int StudentId { get; set; } = 0; // Unique student identifier, not a primary key
 
         [ForeignKey("CurrentLevel")]
         public int CurrentLevelId { get; set; } = 1; // Reference to LevelModel

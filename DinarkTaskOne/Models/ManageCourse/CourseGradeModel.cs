@@ -8,9 +8,9 @@ namespace DinarkTaskOne.Models.ManageCourse
         [Key]
         public int CourseGradeId { get; set; }
 
-        [Required]
-        public int CourseId { get; set; }
-        public CourseModel Course { get; set; } = null!;
+        // Make CourseId nullable to support nullable foreign key
+        public int? CourseId { get; set; } // Nullable CourseId
+        public CourseModel? Course { get; set; } // Nullable navigation property
 
         [Required]
         public int StudentId { get; set; }
@@ -32,7 +32,5 @@ namespace DinarkTaskOne.Models.ManageCourse
             if (score >= 50) return "E";
             return "F";
         }
-
     }
-
 }

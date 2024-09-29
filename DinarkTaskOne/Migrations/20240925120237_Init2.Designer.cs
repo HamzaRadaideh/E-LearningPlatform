@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DinarkTaskOne.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240924074006_UpdateCourseStatusEnum")]
-    partial class UpdateCourseStatusEnum
+    [Migration("20240925120237_Init2")]
+    partial class Init2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -228,6 +228,12 @@ namespace DinarkTaskOne.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AnswerId"));
 
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsCorrect")
                         .HasColumnType("bit");
 
@@ -266,6 +272,9 @@ namespace DinarkTaskOne.Migrations
                     b.Property<int>("QuizId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("Score")
                         .HasColumnType("int");
 
@@ -273,6 +282,9 @@ namespace DinarkTaskOne.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalMarks")
                         .HasColumnType("int");
 
                     b.HasKey("AttemptId");
@@ -298,6 +310,9 @@ namespace DinarkTaskOne.Migrations
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
+                    b.Property<int>("ScoreAwarded")
+                        .HasColumnType("int");
+
                     b.Property<int>("SelectedOptionId")
                         .HasColumnType("int");
 
@@ -320,11 +335,17 @@ namespace DinarkTaskOne.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuestionId"));
 
+                    b.Property<int>("DifficultyLevel")
+                        .HasColumnType("int");
+
                     b.Property<int>("Marks")
                         .HasColumnType("int");
 
                     b.Property<int>("QuizId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Tag")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Text")
                         .IsRequired()
@@ -355,8 +376,17 @@ namespace DinarkTaskOne.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<TimeSpan>("Duration")
                         .HasColumnType("time");
+
+                    b.Property<string>("Instructions")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MaximumMarks")
+                        .HasColumnType("int");
 
                     b.Property<int>("NumberOfQuestions")
                         .HasColumnType("int");
@@ -415,7 +445,10 @@ namespace DinarkTaskOne.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CourseGradeId"));
 
-                    b.Property<int>("CourseId")
+                    b.Property<int?>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CourseModelCourseId")
                         .HasColumnType("int");
 
                     b.Property<bool>("HasPassed")
@@ -434,6 +467,8 @@ namespace DinarkTaskOne.Migrations
                     b.HasKey("CourseGradeId");
 
                     b.HasIndex("CourseId");
+
+                    b.HasIndex("CourseModelCourseId");
 
                     b.HasIndex("StudentId");
 
@@ -476,6 +511,9 @@ namespace DinarkTaskOne.Migrations
 
                     b.Property<int>("MaxCapacity")
                         .HasColumnType("int");
+
+                    b.Property<double>("RemainingMarks")
+                        .HasColumnType("float");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -633,7 +671,6 @@ namespace DinarkTaskOne.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("OverallGrade")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("StudentId")
@@ -659,6 +696,9 @@ namespace DinarkTaskOne.Migrations
                     b.Property<DateTime>("CompletedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("CourseModelCourseId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("bit");
 
@@ -672,6 +712,8 @@ namespace DinarkTaskOne.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("StudentProgressId");
+
+                    b.HasIndex("CourseModelCourseId");
 
                     b.HasIndex("LevelId");
 
@@ -696,9 +738,6 @@ namespace DinarkTaskOne.Migrations
                     b.Property<int>("DepartmentId")
                         .HasColumnType("int");
 
-                    b.Property<int>("InstructorId")
-                        .HasColumnType("int");
-
                     b.HasIndex("DepartmentId");
 
                     b.ToTable("Users");
@@ -714,9 +753,6 @@ namespace DinarkTaskOne.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("MajorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StudentId")
                         .HasColumnType("int");
 
                     b.HasIndex("CurrentLevelId");
@@ -845,13 +881,16 @@ namespace DinarkTaskOne.Migrations
                     b.HasOne("DinarkTaskOne.Models.ManageCourse.CourseModel", "Course")
                         .WithMany()
                         .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DinarkTaskOne.Models.ManageCourse.CourseModel", null)
+                        .WithMany("CourseGrades")
+                        .HasForeignKey("CourseModelCourseId");
 
                     b.HasOne("DinarkTaskOne.Models.UserSpecficModels.StudentModel", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Course");
@@ -941,6 +980,10 @@ namespace DinarkTaskOne.Migrations
 
             modelBuilder.Entity("DinarkTaskOne.Models.student.StudentProgressModel", b =>
                 {
+                    b.HasOne("DinarkTaskOne.Models.ManageCourse.CourseModel", null)
+                        .WithMany("StudentProgress")
+                        .HasForeignKey("CourseModelCourseId");
+
                     b.HasOne("DinarkTaskOne.Models.ManageCourse.LevelModel", "Level")
                         .WithMany("Progresses")
                         .HasForeignKey("LevelId")
@@ -1032,11 +1075,15 @@ namespace DinarkTaskOne.Migrations
                 {
                     b.Navigation("Announcements");
 
+                    b.Navigation("CourseGrades");
+
                     b.Navigation("Enrollments");
 
                     b.Navigation("Materials");
 
                     b.Navigation("Quizzes");
+
+                    b.Navigation("StudentProgress");
                 });
 
             modelBuilder.Entity("DinarkTaskOne.Models.ManageCourse.LevelModel", b =>

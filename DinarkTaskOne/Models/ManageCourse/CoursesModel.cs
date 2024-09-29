@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using DinarkTaskOne.Models.MakeQuiz;
+using DinarkTaskOne.Models.student;
 
 namespace DinarkTaskOne.Models.ManageCourse
 {
@@ -46,13 +47,21 @@ namespace DinarkTaskOne.Models.ManageCourse
         [Required]
         public DateTime CourseEndTime { get; set; }
 
+        // New property for Remaining Marks
+        public double RemainingMarks { get; set; } = 100; // Default remaining marks
+
         // Relationship with Enrollments and Grades
-        public ICollection<EnrollModel> Enrollments { get; set; } = [];
+        public ICollection<EnrollModel> Enrollments { get; set; } = new List<EnrollModel>();
 
+        // New relationship with CourseGrades
+        public ICollection<CourseGradeModel> CourseGrades { get; set; } = new List<CourseGradeModel>();
 
-        public ICollection<QuizModel> Quizzes { get; set; } = [];
-        public ICollection<MaterialsModel> Materials { get; set; } = [];
-        public ICollection<AnnouncementModel> Announcements { get; set; } = [];
+        // New relationship with StudentProgress
+        public ICollection<StudentProgressModel> StudentProgress { get; set; } = new List<StudentProgressModel>();
+
+        public ICollection<QuizModel> Quizzes { get; set; } = new List<QuizModel>();
+        public ICollection<MaterialsModel> Materials { get; set; } = new List<MaterialsModel>();
+        public ICollection<AnnouncementModel> Announcements { get; set; } = new List<AnnouncementModel>();
     }
 
     public enum StatusType
@@ -61,7 +70,6 @@ namespace DinarkTaskOne.Models.ManageCourse
         Completed = 1,
         Cancelled = 2,
         Soon = 3,
-        unavailable = 4
+        Unavailable = 4 // Update to match the view
     }
-
 }

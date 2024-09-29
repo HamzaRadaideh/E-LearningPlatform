@@ -162,12 +162,7 @@ namespace DinarkTaskOne.Services
         public async Task RecordStudentProgressAsync(int studentId, int courseId, double score)
         {
             // Retrieve the levelId from the course
-            var course = await context.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId);
-            if (course == null)
-            {
-                throw new Exception("Course not found.");
-            }
-
+            var course = await context.Courses.FirstOrDefaultAsync(c => c.CourseId == courseId) ?? throw new Exception("Course not found.");
             int levelId = course.LevelId; // Correctly retrieve the LevelId from the course
 
             var existingProgress = await context.StudentProgresses
